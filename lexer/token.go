@@ -1,7 +1,5 @@
 package lexer
 
-type TokenType string
-
 type Context struct {
 	Line int
 	Col  int
@@ -26,6 +24,10 @@ func newToken(
 	}
 }
 
+func (tok *Token) isEOF() bool {
+	return tok.Type == EOF
+}
+
 func newContext(line int, col int) Context {
 	return Context{
 		Line: line,
@@ -38,10 +40,13 @@ const (
 	EOF     = "EOF"
 
 	//Identifiers and literals
-	IDENT = "IDENT"
-	INT   = "INT"
+
+	IDENT  = "IDENT"
+	INT    = "INT"
+	STRLIT = "STRLIT"
 
 	//Operators
+
 	ASSIGN = "="
 
 	ADD = "+"
@@ -76,6 +81,7 @@ const (
 	LAND = "&&"
 
 	//Delimiters
+
 	COMMA   = ","
 	SEMICOL = ";"
 
@@ -83,14 +89,18 @@ const (
 	RPAREN = ")"
 	LBRACE = "{"
 	RBRACE = "}"
+	LSBRKT = "["
+	RSBRKT = "]"
 
 	//Keywords
+
 	FUNCTION = "FUNCTION"
 	LET      = "LET"
-	RETURN   = "->"
+	RETURN   = "RETURN"
 )
 
 var keywords = map[string]string{
-	"fn":  FUNCTION,
-	"let": LET,
+	"fn":     FUNCTION,
+	"let":    LET,
+	"return": RETURN,
 }
