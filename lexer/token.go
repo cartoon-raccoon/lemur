@@ -44,6 +44,7 @@ const (
 	IDENT  = "IDENT"
 	INT    = "INT"
 	STRLIT = "STRLIT"
+	NUMLIT = "NUMLIT"
 
 	//Operators
 
@@ -69,6 +70,8 @@ const (
 	BWOASSIGN = "|="
 	BWAASSIGN = "&="
 	BWNASSIGN = "~="
+
+	DOT = "."
 
 	LT = "<"
 	GT = ">"
@@ -97,10 +100,22 @@ const (
 	FUNCTION = "FUNCTION"
 	LET      = "LET"
 	RETURN   = "RETURN"
+	IF       = "IF"
+	ELSE     = "ELSE"
+	WHILE    = "WHILE"
+	FOR      = "FOR"
+	IN       = "IN"
+	LOOP     = "LOOP"
 )
 
 var keywords = map[string]string{
 	"fn":     FUNCTION,
 	"let":    LET,
 	"return": RETURN,
+	"if":     IF,
+	"else":   ELSE,
+	"while":  WHILE,
+	"for":    FOR,
+	"in":     IN,
+	"loop":   LOOP,
 }
