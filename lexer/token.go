@@ -3,6 +3,7 @@ package lexer
 type Context struct {
 	Line int
 	Col  int
+	Ctxt string
 }
 
 type Token struct {
@@ -16,11 +17,12 @@ func newToken(
 	lit string,
 	line int,
 	col int,
+	ctx string,
 ) Token {
 	return Token{
 		Type:    ttype,
 		Literal: lit,
-		Pos:     newContext(line, col),
+		Pos:     newContext(line, col, ctx),
 	}
 }
 
@@ -28,10 +30,11 @@ func (tok *Token) isEOF() bool {
 	return tok.Type == EOF
 }
 
-func newContext(line int, col int) Context {
+func newContext(line int, col int, ctx string) Context {
 	return Context{
 		Line: line,
 		Col:  col,
+		Ctxt: ctx,
 	}
 }
 

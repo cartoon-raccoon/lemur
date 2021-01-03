@@ -11,6 +11,8 @@ type Lexer struct {
 	line    int
 	col     int
 	pos     int
+	context string
+	lastln  int
 	readPos int
 	ch      byte
 }
@@ -43,41 +45,41 @@ func (l *Lexer) nextToken() (Token, error) {
 		l.nextChar()
 		if l.ch == '=' {
 			l.nextChar()
-			return newToken(EQ, EQ, l.line, l.col), nil
+			return newToken(EQ, EQ, l.line, l.col, l.context), nil
 		}
-		return newToken(ASSIGN, ASSIGN, l.line, l.col), nil
+		return newToken(ASSIGN, ASSIGN, l.line, l.col, l.context), nil
 
 	case l.ch == '+':
 		l.nextChar()
 		if l.ch == '=' {
 			l.nextChar()
-			return newToken(ADDASSIGN, ADDASSIGN, l.line, l.col), nil
+			return newToken(ADDASSIGN, ADDASSIGN, l.line, l.col, l.context), nil
 		}
-		return newToken(ADD, ADD, l.line, l.col), nil
+		return newToken(ADD, ADD, l.line, l.col, l.context), nil
 
 	case l.ch == '-':
 		l.nextChar()
 		if l.ch == '=' {
 			l.nextChar()
-			return newToken(SUBASSIGN, SUBASSIGN, l.line, l.col), nil
+			return newToken(SUBASSIGN, SUBASSIGN, l.line, l.col, l.context), nil
 		}
-		return newToken(SUB, SUB, l.line, l.col), nil
+		return newToken(SUB, SUB, l.line, l.col, l.context), nil
 
 	case l.ch == '*':
 		l.nextChar()
 		if l.ch == '=' {
 			l.nextChar()
-			return newToken(MULASSIGN, MULASSIGN, l.line, l.col), nil
+			return newToken(MULASSIGN, MULASSIGN, l.line, l.col, l.context), nil
 		}
-		return newToken(MUL, MUL, l.line, l.col), nil
+		return newToken(MUL, MUL, l.line, l.col, l.context), nil
 
 	case l.ch == '/':
 		l.nextChar()
 		if l.ch == '=' {
 			l.nextChar()
-			return newToken(DIVASSIGN, DIVASSIGN, l.line, l.col), nil
+			return newToken(DIVASSIGN, DIVASSIGN, l.line, l.col, l.context), nil
 		}
-		return newToken(DIV, DIV, l.line, l.col), nil
+		return newToken(DIV, DIV, l.line, l.col, l.context), nil
 
 	case l.ch == '>':
 		l.nextChar()
@@ -85,12 +87,12 @@ func (l *Lexer) nextToken() (Token, error) {
 		switch l.ch {
 		case '>':
 			l.nextChar()
-			return newToken(BSR, BSR, l.line, l.col), nil
+			return newToken(BSR, BSR, l.line, l.col, l.context), nil
 		case '=':
 			l.nextChar()
-			return newToken(GE, GE, l.line, l.col), nil
+			return newToken(GE, GE, l.line, l.col, l.context), nil
 		default:
-			return newToken(GT, GT, l.line, l.col), nil
+			return newToken(GT, GT, l.line, l.col, l.context), nil
 		}
 
 	case l.ch == '<':
@@ -98,12 +100,12 @@ func (l *Lexer) nextToken() (Token, error) {
 		switch l.ch {
 		case '<':
 			l.nextChar()
-			return newToken(BSL, BSL, l.line, l.col), nil
+			return newToken(BSL, BSL, l.line, l.col, l.context), nil
 		case '=':
 			l.nextChar()
-			return newToken(LE, LE, l.line, l.col), nil
+			return newToken(LE, LE, l.line, l.col, l.context), nil
 		default:
-			return newToken(LT, LT, l.line, l.col), nil
+			return newToken(LT, LT, l.line, l.col, l.context), nil
 		}
 
 	case l.ch == '&':
@@ -111,12 +113,12 @@ func (l *Lexer) nextToken() (Token, error) {
 		switch l.ch {
 		case '&':
 			l.nextChar()
-			return newToken(LAND, LAND, l.line, l.col), nil
+			return newToken(LAND, LAND, l.line, l.col, l.context), nil
 		case '=':
 			l.nextChar()
-			return newToken(BWAASSIGN, BWAASSIGN, l.line, l.col), nil
+			return newToken(BWAASSIGN, BWAASSIGN, l.line, l.col, l.context), nil
 		default:
-			return newToken(BWAND, BWAND, l.line, l.col), nil
+			return newToken(BWAND, BWAND, l.line, l.col, l.context), nil
 		}
 
 	case l.ch == '|':
@@ -124,72 +126,72 @@ func (l *Lexer) nextToken() (Token, error) {
 		switch l.ch {
 		case '|':
 			l.nextChar()
-			return newToken(LOR, LOR, l.line, l.col), nil
+			return newToken(LOR, LOR, l.line, l.col, l.context), nil
 		case '=':
 			l.nextChar()
-			return newToken(BWOASSIGN, BWOASSIGN, l.line, l.col), nil
+			return newToken(BWOASSIGN, BWOASSIGN, l.line, l.col, l.context), nil
 		default:
-			return newToken(BWOR, BWOR, l.line, l.col), nil
+			return newToken(BWOR, BWOR, l.line, l.col, l.context), nil
 		}
 
 	case l.ch == '~':
 		l.nextChar()
 		if l.ch == '=' {
 			l.nextChar()
-			return newToken(BWNASSIGN, BWNASSIGN, l.line, l.col), nil
+			return newToken(BWNASSIGN, BWNASSIGN, l.line, l.col, l.context), nil
 		}
-		return newToken(BWNOT, BWNOT, l.line, l.col), nil
+		return newToken(BWNOT, BWNOT, l.line, l.col, l.context), nil
 
 	case l.ch == ',':
 		l.nextChar()
-		return newToken(COMMA, COMMA, l.line, l.col), nil
+		return newToken(COMMA, COMMA, l.line, l.col, l.context), nil
 
 	case l.ch == ';':
 		l.nextChar()
-		return newToken(SEMICOL, SEMICOL, l.line, l.col), nil
+		return newToken(SEMICOL, SEMICOL, l.line, l.col, l.context), nil
 
 	case l.ch == '(':
 		l.nextChar()
-		return newToken(LPAREN, LPAREN, l.line, l.col), nil
+		return newToken(LPAREN, LPAREN, l.line, l.col, l.context), nil
 
 	case l.ch == ')':
 		l.nextChar()
-		return newToken(RPAREN, RPAREN, l.line, l.col), nil
+		return newToken(RPAREN, RPAREN, l.line, l.col, l.context), nil
 
 	case l.ch == '[':
 		l.nextChar()
-		return newToken(LSBRKT, LSBRKT, l.line, l.col), nil
+		return newToken(LSBRKT, LSBRKT, l.line, l.col, l.context), nil
 
 	case l.ch == ']':
 		l.nextChar()
-		return newToken(RSBRKT, RSBRKT, l.line, l.col), nil
+		return newToken(RSBRKT, RSBRKT, l.line, l.col, l.context), nil
 
 	case l.ch == '{':
 		l.nextChar()
-		return newToken(LBRACE, LBRACE, l.line, l.col), nil
+		return newToken(LBRACE, LBRACE, l.line, l.col, l.context), nil
 
 	case l.ch == '}':
 		l.nextChar()
-		return newToken(RBRACE, RBRACE, l.line, l.col), nil
+		return newToken(RBRACE, RBRACE, l.line, l.col, l.context), nil
 
 	case l.ch == '.':
 		l.nextChar()
-		return newToken(DOT, DOT, l.line, l.col), nil
+		return newToken(DOT, DOT, l.line, l.col, l.context), nil
 
 	case l.ch == '"':
 		l.nextChar()
 		return l.readStrLiteral(), nil
 
 	case l.ch == 0:
-		return newToken(EOF, EOF, l.line, l.col), nil
+		return newToken(EOF, EOF, l.line, l.col, l.context), nil
 
 	default:
 		if isAlnum(l.ch) {
 			return l.readIdent(), nil
 		}
-		return newToken("", "", 0, 0), LexerErr{
+		return newToken("", "", 0, 0, ""), LexerErr{
 			Msg: "Unknown token",
-			Con: newContext(l.line, l.col),
+			Con: newContext(l.line, l.col, l.context),
 		}
 	}
 }
@@ -201,9 +203,9 @@ func (l *Lexer) readIdent() Token {
 	}
 	token := l.input[position:l.pos]
 	if tok, isKw := lookupKeyword(token); isKw {
-		return newToken(tok, tok, l.line, l.col)
+		return newToken(tok, tok, l.line, l.col, l.context)
 	}
-	return newToken(IDENT, token, l.line, l.col)
+	return newToken(IDENT, token, l.line, l.col, l.context)
 }
 
 func (l *Lexer) readStrLiteral() Token {
@@ -212,7 +214,7 @@ func (l *Lexer) readStrLiteral() Token {
 		if l.ch == '"' {
 			token := l.input[position:l.pos]
 			l.nextChar()
-			return newToken(STRLIT, token, l.line, l.col)
+			return newToken(STRLIT, token, l.line, l.col, l.context)
 		} else if l.ch == '\\' { //handling escaped characters and backslashes
 			l.nextChar()
 			// switch l.ch {
@@ -224,10 +226,10 @@ func (l *Lexer) readStrLiteral() Token {
 			// 	l.input = strings.Replace(l.input, "\\t", "\t", 1)
 			// default:
 			// 	l.input = strings.Replace(l.input, "\\", "", 1)
-			// 	l.col--
+			// 	l.col, l.context--
 			// }
 		} else if l.ch == 0 {
-			return newToken(EOF, EOF, l.line, l.col)
+			return newToken(EOF, EOF, l.line, l.col, l.context)
 		}
 		l.nextChar()
 	}
@@ -244,6 +246,8 @@ func (l *Lexer) nextChar() {
 		if l.ch == '\n' {
 			l.col = 0
 			l.line++
+			l.context = l.input[l.lastln:l.pos]
+			l.lastln = l.pos
 		} else {
 			l.col++
 		}
