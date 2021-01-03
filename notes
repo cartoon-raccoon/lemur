@@ -1,3 +1,4 @@
 todo: 
 Add method to parse string literals and handle escaped characters
 Implement stripping comments
+Add support for hex and binary numlits
