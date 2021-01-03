@@ -177,19 +177,20 @@ func (l *Lexer) nextToken() (Token, error) {
 		return newToken(DOT, DOT, l.line, l.col), nil
 
 	case l.ch == '"':
+		l.nextChar()
 		return l.readStrLiteral(), nil
-
-	case isLetter(l.ch):
-		return l.readIdent(), nil
-
-	case isNumber(l.ch):
-		return l.readNumLiteral()
 
 	case l.ch == 0:
 		return newToken(EOF, EOF, l.line, l.col), nil
 
 	default:
-		return newToken(ILLEGAL, ILLEGAL, l.line, l.col), nil
+		if isAlnum(l.ch) {
+			return l.readIdent(), nil
+		}
+		return newToken("", "", 0, 0), LexerErr{
+			Msg: "Unknown token",
+			Con: newContext(l.line, l.col),
+		}
 	}
 }
 
@@ -208,33 +209,27 @@ func (l *Lexer) readIdent() Token {
 func (l *Lexer) readStrLiteral() Token {
 	position := l.pos
 	for {
-		l.nextChar()
 		if l.ch == '"' {
 			token := l.input[position:l.pos]
+			l.nextChar()
 			return newToken(STRLIT, token, l.line, l.col)
+		} else if l.ch == '\\' { //handling escaped characters and backslashes
+			l.nextChar()
+			// switch l.ch {
+			// case 'n':
+			// 	l.input = strings.Replace(l.input, "\\n", "\n", 1)
+			// case 'r':
+			// 	l.input = strings.Replace(l.input, "\\r", "\r", 1)
+			// case 't':
+			// 	l.input = strings.Replace(l.input, "\\t", "\t", 1)
+			// default:
+			// 	l.input = strings.Replace(l.input, "\\", "", 1)
+			// 	l.col--
+			// }
 		} else if l.ch == 0 {
 			return newToken(EOF, EOF, l.line, l.col)
 		}
-	}
-}
-
-func (l *Lexer) readNumLiteral() (Token, error) {
-	position := l.pos
-
-	for {
 		l.nextChar()
-		if l.ch == ' ' {
-			token := l.input[position:l.pos]
-			return newToken(NUMLIT, token, l.line, l.col), nil
-		} else if !isNumber(l.ch) {
-			if l.ch == '.' || l.ch == '_' {
-				continue
-			}
-			return newToken("", "", 0, 0), LexerErr{
-				Msg: "unexpected character in number literal",
-				Con: newContext(l.line, l.col),
-			}
-		}
 	}
 }
 
@@ -257,12 +252,6 @@ func (l *Lexer) nextChar() {
 
 func (l *Lexer) skipWhitespace() {
 	for l.ch == ' ' || l.ch == '\n' || l.ch == '\r' || l.ch == '\t' {
-		if l.ch == '\n' {
-			l.col = 0
-			l.line++
-		} else {
-			l.col++
-		}
 		l.nextChar()
 	}
 }
@@ -307,7 +296,7 @@ func isLetter(ch byte) bool {
 }
 
 func isNumber(ch byte) bool {
-	return 'A' <= ch && ch <= 'Z'
+	return '0' <= ch && ch <= '9'
 }
 
 type LexerErr struct {

@@ -42,9 +42,7 @@ const (
 	//Identifiers and literals
 
 	IDENT  = "IDENT"
-	INT    = "INT"
 	STRLIT = "STRLIT"
-	NUMLIT = "NUMLIT"
 
 	//Operators
 
@@ -106,6 +104,10 @@ const (
 	FOR      = "FOR"
 	IN       = "IN"
 	LOOP     = "LOOP"
+	STRING   = "STRING"
+	INT      = "INT"
+	FLOAT    = "FLOAT"
+	CLASS    = "CLASS"
 )
 
 var keywords = map[string]string{
@@ -118,4 +120,7 @@ var keywords = map[string]string{
 	"for":    FOR,
 	"in":     IN,
 	"loop":   LOOP,
+	"int":    INT,
+	"float":  FLOAT,
+	"class":  CLASS,
 }
