@@ -1,11 +1,13 @@
 package lexer
 
+// Context is the place of that particular token in the text
 type Context struct {
 	Line int
 	Col  int
 	Ctxt string
 }
 
+// Token represents a single word in Monkey
 type Token struct {
 	Type    string
 	Literal string
@@ -38,14 +40,22 @@ func newContext(line int, col int, ctx string) Context {
 	}
 }
 
+//Types of tokens
 const (
+	// ILLEGAL - Unknown token
 	ILLEGAL = "ILLEGAL"
-	EOF     = "EOF"
+
+	// EOF - End of file
+	EOF = "EOF"
 
 	//Identifiers and literals
 
-	IDENT  = "IDENT"
+	// IDENT - Identifier (variable/function name)
+	IDENT = "IDENT"
+	// STRLIT - String literal
 	STRLIT = "STRLIT"
+	// NUMLIT - Numerical literal
+	NUMLIT = "NUMLIT"
 
 	//Operators
 

@@ -5,10 +5,10 @@ import "testing"
 func TestNextToken(t *testing.T) {
 
 	input := `let five = 5;
-let ten = 10;
+let ten = 10.0;
 fn hello() {
-	five += 10;
-	let sum = five + 10;
+	five += 1_000.0;
+	let sum = five + 10_000;
 }
 let str = "Hello i am\n cool\n";
 let add = fn(a, b) {
@@ -31,12 +31,12 @@ if thou == 1_000.57 {
 		{LET, "LET"},
 		{IDENT, "five"},
 		{ASSIGN, "="},
-		{IDENT, "5"},
+		{NUMLIT, "5"},
 		{SEMICOL, ";"},
 		{LET, "LET"},
 		{IDENT, "ten"},
 		{ASSIGN, "="},
-		{IDENT, "10"},
+		{NUMLIT, "10.0"},
 		{SEMICOL, ";"},
 		{FUNCTION, "FUNCTION"},
 		{IDENT, "hello"},
@@ -45,14 +45,14 @@ if thou == 1_000.57 {
 		{LBRACE, "{"},
 		{IDENT, "five"},
 		{ADDASSIGN, "+="},
-		{IDENT, "10"},
+		{NUMLIT, "1_000.0"},
 		{SEMICOL, ";"},
 		{LET, "LET"},
 		{IDENT, "sum"},
 		{ASSIGN, "="},
 		{IDENT, "five"},
 		{ADD, "+"},
-		{IDENT, "10"},
+		{NUMLIT, "10_000"},
 		{SEMICOL, ";"},
 		{RBRACE, "}"},
 		{LET, "LET"},
@@ -77,7 +77,7 @@ if thou == 1_000.57 {
 	}
 
 	for i, tt := range tests {
-		tok, err := l.nextToken()
+		tok, err := l.NextToken()
 		if err != nil {
 			t.Fatalf("Error on token %d, expected %q", i, tt.expectedToken)
 		}

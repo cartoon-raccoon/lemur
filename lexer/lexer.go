@@ -6,6 +6,7 @@ import (
 
 /*------------Lexer------------*/
 
+// Lexer represents the FSM that tokenizes the input to the interpreter
 type Lexer struct {
 	input   string
 	line    int
@@ -17,26 +18,29 @@ type Lexer struct {
 	ch      byte
 }
 
+// New returns a new uninitialized lexer
 func New(input string) *Lexer {
 	l := &Lexer{input: input}
 	l.nextChar()
 	return l
 }
 
+// Tokenize fully advances the lexer and returns a slice of tokens
 func (l *Lexer) Tokenize() (tokens []Token, err error) {
 	tokens = make([]Token, 0)
-	tok, err := l.nextToken()
+	tok, err := l.NextToken()
 	for !tok.isEOF() {
 		if err != nil {
 			return
 		}
-		tok, err = l.nextToken()
+		tok, err = l.NextToken()
 		tokens = append(tokens, tok)
 	}
 	return
 }
 
-func (l *Lexer) nextToken() (Token, error) {
+// NextToken advances the lexer and produces a token
+func (l *Lexer) NextToken() (Token, error) {
 	l.skipWhitespace()
 
 	switch {
@@ -186,10 +190,13 @@ func (l *Lexer) nextToken() (Token, error) {
 		return newToken(EOF, EOF, l.line, l.col, l.context), nil
 
 	default:
-		if isAlnum(l.ch) {
+		if isLetter(l.ch) {
 			return l.readIdent(), nil
 		}
-		return newToken("", "", 0, 0, ""), LexerErr{
+		if isNumber(l.ch) {
+			return l.readNumLit(), nil
+		}
+		return newToken("", "", 0, 0, ""), Err{
 			Msg: "Unknown token",
 			Con: newContext(l.line, l.col, l.context),
 		}
@@ -235,6 +242,15 @@ func (l *Lexer) readStrLiteral() Token {
 	}
 }
 
+func (l *Lexer) readNumLit() Token {
+	position := l.pos
+	for isNumber(l.ch) || l.ch == '_' || l.ch == '.' {
+		l.nextChar()
+	}
+	token := l.input[position:l.pos]
+	return newToken(NUMLIT, token, l.line, l.col, l.context)
+}
+
 func (l *Lexer) nextChar() {
 	//have reached EOF
 	if l.readPos >= len(l.input) {
@@ -260,7 +276,7 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 
-func (l *Lexer) skipMultiLineComment() {
+func (l *Lexer) skipBlockComment() {
 	for {
 		l.nextChar()
 		if l.ch == '*' {
@@ -273,7 +289,7 @@ func (l *Lexer) skipMultiLineComment() {
 	}
 }
 
-func (l *Lexer) skipSingleLineComment() {
+func (l *Lexer) skipLineComment() {
 	for {
 		l.nextChar()
 		if l.ch == '\n' {
@@ -303,12 +319,13 @@ func isNumber(ch byte) bool {
 	return '0' <= ch && ch <= '9'
 }
 
-type LexerErr struct {
+// Err represents the an error that the lexer can return
+type Err struct {
 	Msg string
 	Con Context
 }
 
-func (err LexerErr) Error() string {
+func (err Err) Error() string {
 	return fmt.Sprintf(
 		"%s: line %d, col %d",
 		err.Msg,
