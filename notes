@@ -1,1 +1,3 @@
-todo: Add string literal parsing
+todo: 
+Add method to parse string literals and handle escaped characters
+Implement stripping comments
