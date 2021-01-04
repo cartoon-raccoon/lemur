@@ -34,17 +34,6 @@ func (p *Program) TokenLiteral() string {
 	return ""
 }
 
-type LetStatement struct {
-	Token lexer.Token
-	Name  *Identifier
-	Value Expression
-}
-
-func (ls *LetStatement) statementNode() {}
-func (ls *LetStatement) TokenLiteral() string {
-	return ls.Token.Literal
-}
-
 type Identifier struct {
 	Token lexer.Token
 	Value string
