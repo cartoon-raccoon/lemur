@@ -2,3 +2,11 @@ todo:
 Add method to parse string literals and handle escaped characters
 Implement stripping comments
 Add support for hex and binary numlits
+
+Statements:
+Any expression can be a statement
+Let Statement - let IDENT EQUALS (EXPR)
+
+Expressions:
+Literals - STRLIT | NUMLIT
+Function calls - function()
