@@ -20,8 +20,6 @@ func TestLetStatements(t *testing.T) {
 	program := p.Parse()
 	if program == nil {
 		t.Fatalf("Parser could not generate AST")
-	} else if program, ok := program.(*ast.Program); !ok {
-		t.Fatalf("Generated AST is not a program")
 	}
 
 	tests := []struct {
@@ -33,7 +31,7 @@ func TestLetStatements(t *testing.T) {
 	}
 
 	for i, ident := range tests {
-		stmt := program.(*ast.Program).Statements[i]
+		stmt := program.Statements[i]
 		if !testLetStatement(t, stmt, ident.expectedIdent) {
 			return
 		}

@@ -27,8 +27,58 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	return p, nil
 }
 
-func (p *Parser) Parse() ast.Node {
+func (p *Parser) Parse() *ast.Program {
+	program := &ast.Program{}
+	program.Statements = []ast.Statement{}
 
+	for !p.curTokenIs(lexer.EOF) {
+		stmt := p.parseStatement()
+		if stmt != nil {
+			program.Statements = append(program.Statements, stmt)
+		}
+		p.advance()
+	}
+
+	return program
+}
+
+func (p *Parser) parseStatement() ast.Statement {
+	switch p.current.Type {
+	case lexer.LET:
+		return p.parseLetStatement()
+	default:
+		return nil
+	}
+}
+
+func (p *Parser) parseLetStatement() *ast.LetStatement {
+	stmt := &ast.LetStatement{Token: p.current}
+
+	if !p.nextTokenIs(lexer.IDENT) {
+		return nil
+	}
+
+	p.advance()
+
+	stmt.Name = &ast.Identifier{Token: p.current, Value: p.current.Literal}
+
+	if !p.nextTokenIs(lexer.ASSIGN) {
+		return nil
+	}
+
+	for !p.curTokenIs(lexer.SEMICOL) {
+		p.advance()
+	}
+
+	return stmt
+}
+
+func (p *Parser) curTokenIs(t string) bool {
+	return p.current.Type == t
+}
+
+func (p *Parser) nextTokenIs(t string) bool {
+	return p.next.Type == t
 }
 
 func (p *Parser) advance() error {
