@@ -67,6 +67,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	}
 
 	for !p.curTokenIs(lexer.SEMICOL) {
+
 		p.advance()
 	}
 
