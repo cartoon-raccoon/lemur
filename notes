@@ -6,7 +6,8 @@ Add support for hex and binary numlits
 Statements:
 Any expression can be a statement
 Let Statement - let IDENT EQUALS (EXPR)
+Return Statement - return (EXPR)
 
 Expressions:
-Literals - STRLIT | NUMLIT
+Literals - STRLIT | NUMLIT | function literals
 Function calls - function()
