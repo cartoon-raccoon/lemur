@@ -52,6 +52,8 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 	switch p.current.Type {
 	case lexer.LET:
 		return p.parseLetStatement()
+	case lexer.RETURN:
+		return p.parseReturnStatement()
 	default:
 		return nil, nil
 	}
@@ -78,10 +80,33 @@ func (p *Parser) parseLetStatement() (*ast.LetStatement, error) {
 		}
 	}
 
-	for !p.curTokenIs(lexer.SEMICOL) {
+	p.advance() //todo: parse expression here
 
+	// note: this does not account for if the user forgets to put a semicolon
+	// The parser will happily continue advancing until it hits a semicolon,
+	// whenever that may be
+	for !p.curTokenIs(lexer.SEMICOL) {
 		p.advance()
 	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseReturnStatement() (*ast.ReturnStatement, error) {
+	stmt := &ast.ReturnStatement{Token: p.current}
+
+	p.advance()
+
+	for !p.curTokenIs(lexer.SEMICOL) {
+		p.advance()
+	}
+
+	// if !p.nextTokenIs(lexer.SEMICOL) {
+	// 	return nil, Err{
+	// 		Msg: fmt.Sprintf("Expected semicolon, got %s", p.next.Type),
+	// 		Con: p.next.Pos,
+	// 	}
+	// }
 
 	return stmt, nil
 }

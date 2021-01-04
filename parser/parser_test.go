@@ -18,8 +18,8 @@ func TestLetStatements(t *testing.T) {
 		t.Fatalf("Error instantiating parser: malformed input")
 	}
 	program, err := p.Parse()
-	if program == nil {
-		t.Fatalf("Parser could not generate AST")
+	if program == nil || err != nil {
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -51,4 +51,30 @@ func testLetStatement(t *testing.T, stmt ast.Statement, ident string) bool {
 	}
 
 	return true
+}
+
+func TestReturnStatement(t *testing.T) {
+	input := `return x;
+	return 0.78;
+	return "what";`
+
+	l := lexer.New(input)
+	p, err := New(l)
+	if err != nil {
+		t.Fatalf("Error instantiating parser: malformed input")
+	}
+	program, err := p.Parse()
+	if program == nil {
+		t.Fatalf(err.Error())
+	}
+
+	for _, stmt := range program.Statements {
+		if stmt.TokenLiteral() != lexer.RETURN {
+			t.Fatalf("Error: expected RETURN, got %q", stmt.TokenLiteral())
+		}
+		_, ok := stmt.(*ast.ReturnStatement)
+		if !ok {
+			t.Fatalf("statement is not a return statement")
+		}
+	}
 }
