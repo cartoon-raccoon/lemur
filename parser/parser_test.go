@@ -17,7 +17,7 @@ func TestLetStatements(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error instantiating parser: malformed input")
 	}
-	program := p.Parse()
+	program, err := p.Parse()
 	if program == nil {
 		t.Fatalf("Parser could not generate AST")
 	}
@@ -39,7 +39,7 @@ func TestLetStatements(t *testing.T) {
 }
 
 func testLetStatement(t *testing.T, stmt ast.Statement, ident string) bool {
-	if stmt.TokenLiteral() != "let" {
+	if stmt.TokenLiteral() != lexer.LET {
 		t.Errorf("error: wrong token, expected \"let\" got %q", stmt.TokenLiteral())
 	}
 	letstmt, ok := stmt.(*ast.LetStatement)

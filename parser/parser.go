@@ -1,16 +1,20 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/cartoon-raccoon/monkey-jit/ast"
 	"github.com/cartoon-raccoon/monkey-jit/lexer"
 )
 
+//Parser - represents the parser for Monkey
 type Parser struct {
 	lexer   *lexer.Lexer
 	current lexer.Token
 	next    lexer.Token
 }
 
+//New - returns a new Parser
 func New(l *lexer.Lexer) (*Parser, error) {
 	p := &Parser{lexer: l}
 
@@ -27,35 +31,40 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	return p, nil
 }
 
-func (p *Parser) Parse() *ast.Program {
+// Parse - parses a stream of tokens
+func (p *Parser) Parse() (*ast.Program, error) {
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
 
 	for !p.curTokenIs(lexer.EOF) {
-		stmt := p.parseStatement()
-		if stmt != nil {
-			program.Statements = append(program.Statements, stmt)
+		stmt, err := p.parseStatement()
+		if err != nil {
+			return nil, err
 		}
+		program.Statements = append(program.Statements, stmt)
 		p.advance()
 	}
 
-	return program
+	return program, nil
 }
 
-func (p *Parser) parseStatement() ast.Statement {
+func (p *Parser) parseStatement() (ast.Statement, error) {
 	switch p.current.Type {
 	case lexer.LET:
 		return p.parseLetStatement()
 	default:
-		return nil
+		return nil, nil
 	}
 }
 
-func (p *Parser) parseLetStatement() *ast.LetStatement {
+func (p *Parser) parseLetStatement() (*ast.LetStatement, error) {
 	stmt := &ast.LetStatement{Token: p.current}
 
 	if !p.nextTokenIs(lexer.IDENT) {
-		return nil
+		return stmt, Err{
+			Msg: fmt.Sprintf("Expected identifier, got `%s`", p.next.Type),
+			Con: p.next.Pos,
+		}
 	}
 
 	p.advance()
@@ -63,7 +72,10 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	stmt.Name = &ast.Identifier{Token: p.current, Value: p.current.Literal}
 
 	if !p.nextTokenIs(lexer.ASSIGN) {
-		return nil
+		return stmt, Err{
+			Msg: fmt.Sprintf("Expected assignment operator, got `%s`", p.next.Type),
+			Con: p.next.Pos,
+		}
 	}
 
 	for !p.curTokenIs(lexer.SEMICOL) {
@@ -71,7 +83,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		p.advance()
 	}
 
-	return stmt
+	return stmt, nil
 }
 
 func (p *Parser) curTokenIs(t string) bool {
@@ -90,4 +102,19 @@ func (p *Parser) advance() error {
 	}
 	p.next = next
 	return nil
+}
+
+//Err represents the error that can be thrown by the parser
+type Err struct {
+	Msg string
+	Con lexer.Context
+}
+
+func (e Err) Error() string {
+	return fmt.Sprintf(
+		"%s: line %d, col %d",
+		e.Msg,
+		e.Con.Line,
+		e.Con.Col,
+	)
 }
