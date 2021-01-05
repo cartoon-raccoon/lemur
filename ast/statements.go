@@ -1,6 +1,8 @@
 package ast
 
 import (
+	"bytes"
+
 	"github.com/cartoon-raccoon/monkey-jit/lexer"
 )
 
@@ -18,15 +20,65 @@ func (ls *LetStatement) TokenLiteral() string {
 	return ls.Token.Literal
 }
 
+func (ls *LetStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(ls.TokenLiteral() + " ")
+	out.WriteString(ls.Name.Value + " ")
+	out.WriteString("= ")
+
+	if ls.Value != nil {
+		out.WriteString(ls.Value.String())
+	}
+	out.WriteString(";")
+
+	return out.String()
+
+}
+
+// ExprStatement - represents a bare expression in Monkey
+type ExprStatement struct {
+	Token      lexer.Token
+	Expression Expression
+}
+
+func (es *ExprStatement) statementNode() {}
+
+// TokenLiteral - Implements Node for ExpressionStatement
+func (es *ExprStatement) TokenLiteral() string {
+	return es.Token.Literal
+}
+
+func (es *ExprStatement) String() string {
+	var out bytes.Buffer
+	if es.Expression != nil {
+		out.WriteString(es.Expression.String())
+	}
+	return ""
+}
+
 // ReturnStatement - represents a return statement in the AST
 type ReturnStatement struct {
 	Token lexer.Token
 	Value Expression
 }
 
-func (ls *ReturnStatement) statementNode() {}
+func (rs *ReturnStatement) statementNode() {}
 
 // TokenLiteral - Implements Node for ReturnStatement
-func (ls *ReturnStatement) TokenLiteral() string {
-	return ls.Token.Literal
+func (rs *ReturnStatement) TokenLiteral() string {
+	return rs.Token.Literal
+}
+
+func (rs *ReturnStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(rs.TokenLiteral() + " ")
+	if rs.Value != nil {
+		out.WriteString(rs.Value.String())
+	}
+	out.WriteString(";")
+
+	return out.String()
+
 }
