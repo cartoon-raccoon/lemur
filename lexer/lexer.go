@@ -248,11 +248,18 @@ func (l *Lexer) readStrLiteral() Token {
 
 func (l *Lexer) readNumLit() Token {
 	position := l.pos
+	isFloat := false
 	for isNumber(l.ch) || l.ch == '_' || l.ch == '.' {
+		if l.ch == '.' {
+			isFloat = true
+		}
 		l.nextChar()
 	}
 	token := l.input[position:l.pos]
-	return newToken(NUMLIT, token, l.line, l.col, l.context)
+	if isFloat {
+		return newToken(FLTLIT, token, l.line, l.col, l.context)
+	}
+	return newToken(INTLIT, token, l.line, l.col, l.context)
 }
 
 func (l *Lexer) nextChar() {

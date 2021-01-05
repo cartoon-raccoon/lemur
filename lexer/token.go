@@ -54,8 +54,10 @@ const (
 	IDENT = "IDENT"
 	// STRLIT - String literal
 	STRLIT = "STRLIT"
-	// NUMLIT - Numerical literal
-	NUMLIT = "NUMLIT"
+	// INTLIT - Integer literal
+	INTLIT = "INTLIT"
+	// FLTLIT - Float literal
+	FLTLIT = "FLTLIT"
 
 	//Operators
 
