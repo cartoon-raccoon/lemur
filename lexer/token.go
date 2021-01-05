@@ -94,6 +94,8 @@ const (
 	LOR  = "||"
 	LAND = "&&"
 
+	BANG = "!"
+
 	//Delimiters
 
 	COMMA   = ","
@@ -108,19 +110,19 @@ const (
 
 	//Keywords
 
-	FUNCTION = "FUNCTION"
-	LET      = "LET"
-	RETURN   = "RETURN"
-	IF       = "IF"
-	ELSE     = "ELSE"
-	WHILE    = "WHILE"
-	FOR      = "FOR"
-	IN       = "IN"
-	LOOP     = "LOOP"
-	STRING   = "STRING"
-	INT      = "INT"
-	FLOAT    = "FLOAT"
-	CLASS    = "CLASS"
+	FUNCTION = "fn"
+	LET      = "let"
+	RETURN   = "return"
+	IF       = "if"
+	ELSE     = "else"
+	WHILE    = "while"
+	FOR      = "for"
+	IN       = "in"
+	LOOP     = "loop"
+	STRING   = "str"
+	INT      = "int"
+	FLOAT    = "flt"
+	CLASS    = "class"
 )
 
 var keywords = map[string]string{

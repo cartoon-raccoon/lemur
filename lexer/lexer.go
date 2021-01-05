@@ -182,6 +182,10 @@ func (l *Lexer) NextToken() (Token, error) {
 		l.nextChar()
 		return newToken(DOT, DOT, l.line, l.col, l.context), nil
 
+	case l.ch == '!':
+		l.nextChar()
+		return newToken(BANG, BANG, l.line, l.col, l.context), nil
+
 	case l.ch == '"':
 		l.nextChar()
 		return l.readStrLiteral(), nil
