@@ -68,6 +68,10 @@ func TestReturnStatement(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
+	if len := len(program.Statements); len != 3 {
+		t.Fatalf("Wrong number of statements: expected 3, got %d", len)
+	}
+
 	for _, stmt := range program.Statements {
 		if stmt.TokenLiteral() != lexer.RETURN {
 			t.Fatalf("Error: expected RETURN, got %q", stmt.TokenLiteral())
@@ -76,5 +80,28 @@ func TestReturnStatement(t *testing.T) {
 		if !ok {
 			t.Fatalf("statement is not a return statement")
 		}
+	}
+}
+
+func TestIdentExpr(t *testing.T) {
+	testcode := "foobar;"
+
+	l := lexer.New(testcode)
+	p, err := New(l)
+	if err != nil {
+		t.Fatalf("Error: lexer encountered an error - %s", err)
+	}
+
+	prog, err := p.Parse()
+	if err != nil {
+		t.Fatalf("Error: parser encountered an error - %s", err)
+	}
+
+	if len := len(prog.Statements); len != 1 {
+		t.Fatalf("Not enough statements, got: %d", len)
+	}
+
+	if stmt, ok := prog.Statements[0].(*ast.ExprStatement); !ok {
+		t.Fatalf("Statement is not expression statment, got %q", stmt.String())
 	}
 }
