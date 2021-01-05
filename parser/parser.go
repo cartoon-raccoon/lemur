@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/cartoon-raccoon/monkey-jit/ast"
 	"github.com/cartoon-raccoon/monkey-jit/lexer"
@@ -56,6 +57,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 
 	p.prefixParseFns = make(map[string]prefixParseFn)
 	p.registerPrefixFn(lexer.IDENT, p.parseIdentifier)
+	p.registerPrefixFn(lexer.INTLIT, p.parseIntLiteral)
 
 	return p, nil
 }
@@ -110,13 +112,26 @@ func (p *Parser) parseLetStatement() (*ast.LetStatement, error) {
 	}
 
 	p.advance() //todo: parse expression here
+	if p.next.Type != lexer.INTLIT {
+		panic(fmt.Sprintf("unexpected token, got %s", p.next.Type))
+	}
+	p.advance()
+	if p.next.Type != lexer.SEMICOL {
+		panic(fmt.Sprintf("unexpected token, got %s", p.next.Type))
+	}
+	val := p.parseExpression(LOWEST)
+	if val == nil {
+		return stmt, Err{
+			Msg: fmt.Sprintf("Could not parse expression"),
+			Con: p.current.Pos,
+		}
+	}
+	stmt.Value = val
 
 	// note: this does not account for if the user forgets to put a semicolon
 	// The parser will happily continue advancing until it hits a semicolon,
 	// whenever that may be
-	for !p.curTokenIs(lexer.SEMICOL) {
-		p.advance()
-	}
+	p.advance() //puts the next token in p.current
 
 	return stmt, nil
 }
@@ -164,6 +179,17 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.current, Value: p.current.Literal}
+}
+
+func (p *Parser) parseIntLiteral() ast.Expression {
+	lit := &ast.Int{Token: p.current}
+	value, err := strconv.ParseInt(p.current.Literal, 0, 64)
+	if err != nil {
+		//todo: return err
+		return nil
+	}
+	lit.Inner = value
+	return lit
 }
 
 func (p *Parser) registerPrefixFn(tt string, fn prefixParseFn) {
