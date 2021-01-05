@@ -12,7 +12,33 @@ type Parser struct {
 	lexer   *lexer.Lexer
 	current lexer.Token
 	next    lexer.Token
+
+	prefixParseFns map[string]prefixParseFn
+	infixParseFns  map[string]infixParseFn
 }
+
+type (
+	prefixParseFn func() ast.Expression
+	infixParseFn  func(ast.Expression) ast.Expression
+)
+
+const (
+	_ int = iota
+	// LOWEST - The lowest precedence an expression can take
+	LOWEST
+	// EQUALS - ==
+	EQUALS
+	// COMPARE - < or >
+	COMPARE
+	// SUM - a + b
+	SUM
+	// PRODUCT - a * b
+	PRODUCT
+	// PREFIX - -x or !x
+	PREFIX
+	// CALL - a function call
+	CALL
+)
 
 //New - returns a new Parser
 func New(l *lexer.Lexer) (*Parser, error) {
@@ -27,6 +53,9 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	if err2 != nil {
 		return p, err2
 	}
+
+	p.prefixParseFns = make(map[string]prefixParseFn)
+	p.registerPrefixFn(lexer.IDENT, p.parseIdentifier)
 
 	return p, nil
 }
@@ -55,7 +84,7 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 	case lexer.RETURN:
 		return p.parseReturnStatement()
 	default:
-		return nil, nil
+		return p.parseExprStatement()
 	}
 }
 
@@ -109,6 +138,40 @@ func (p *Parser) parseReturnStatement() (*ast.ReturnStatement, error) {
 	// }
 
 	return stmt, nil
+}
+
+func (p *Parser) parseExprStatement() (*ast.ExprStatement, error) {
+	stmt := &ast.ExprStatement{Token: p.current}
+
+	stmt.Expression = p.parseExpression(LOWEST)
+
+	if p.nextTokenIs(lexer.SEMICOL) {
+		p.advance()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseExpression(precedence int) ast.Expression {
+	prefix := p.prefixParseFns[p.current.Type]
+	if prefix == nil {
+		return nil
+	}
+	leftExp := prefix()
+
+	return leftExp
+}
+
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{Token: p.current, Value: p.current.Literal}
+}
+
+func (p *Parser) registerPrefixFn(tt string, fn prefixParseFn) {
+	p.prefixParseFns[tt] = fn
+}
+
+func (p *Parser) registerInfixFn(tt string, fn infixParseFn) {
+	p.infixParseFns[tt] = fn
 }
 
 func (p *Parser) curTokenIs(t string) bool {
