@@ -125,6 +125,9 @@ const (
 	INT      = "int"
 	FLOAT    = "flt"
 	CLASS    = "class"
+	BOOL     = "bool"
+	TRUE     = "true"
+	FALSE    = "false"
 )
 
 var keywords = map[string]string{
@@ -140,4 +143,7 @@ var keywords = map[string]string{
 	"int":    INT,
 	"float":  FLOAT,
 	"class":  CLASS,
+	"bool":   BOOL,
+	"true":   TRUE,
+	"false":  FALSE,
 }
