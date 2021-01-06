@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"bytes"
 	"strconv"
 
 	"github.com/cartoon-raccoon/monkey-jit/lexer"
@@ -22,6 +23,30 @@ func (i *Identifier) TokenLiteral() string {
 // String - implements Node for Identifier
 func (i *Identifier) String() string {
 	return i.Value
+}
+
+// PrefixExpr represents a prefixed expression, such as ! or -
+type PrefixExpr struct {
+	Token    lexer.Token
+	Operator string
+	Right    Expression
+}
+
+func (pe *PrefixExpr) expressionNode() {}
+
+// TokenLiteral implements Node for PrefixExpr
+func (pe *PrefixExpr) TokenLiteral() string {
+	return pe.Token.Literal
+}
+
+// String implements Node for PrefixExpr
+func (pe *PrefixExpr) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(pe.Operator)
+	out.WriteString(pe.Right.String())
+
+	return out.String()
 }
 
 // Literal defines a literal in Monkey: string, int or float
