@@ -80,6 +80,9 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerPrefixFn(lexer.IDENT, p.parseIdentifier)
 	p.registerPrefixFn(lexer.INTLIT, p.parseIntLiteral)
 	p.registerPrefixFn(lexer.FLTLIT, p.parseFltLiteral)
+	p.registerPrefixFn(lexer.STRLIT, p.parseStrLiteral)
+	p.registerPrefixFn(lexer.TRUE, p.parseBoolLiteral)
+	p.registerPrefixFn(lexer.FALSE, p.parseBoolLiteral)
 	p.registerPrefixFn(lexer.BANG, p.parsePrefixExpr)
 	p.registerPrefixFn(lexer.SUB, p.parsePrefixExpr)
 
@@ -239,6 +242,22 @@ func (p *Parser) parseIntLiteral() ast.Expression {
 func (p *Parser) parseFltLiteral() ast.Expression {
 	lit := &ast.Flt{Token: p.current}
 	value, err := strconv.ParseFloat(p.current.Literal, 64)
+	if err != nil {
+		return nil
+	}
+	lit.Inner = value
+	return lit
+}
+
+func (p *Parser) parseStrLiteral() ast.Expression {
+	lit := &ast.Str{Token: p.current}
+	lit.Inner = p.current.Literal
+	return lit
+}
+
+func (p *Parser) parseBoolLiteral() ast.Expression {
+	lit := &ast.Bool{Token: p.current}
+	value, err := strconv.ParseBool(p.current.Literal)
 	if err != nil {
 		return nil
 	}

@@ -117,35 +117,84 @@ func TestIdentExpr(t *testing.T) {
 	}
 }
 
-func TestIntExpr(t *testing.T) {
-	input := "5;"
-
-	l := lexer.New(input)
-	p, err := New(l)
-	if err != nil {
-		t.Fatalf("Error: lexer encountered an error - %s", err)
+func TestLiteralExpr(t *testing.T) {
+	tests := []struct {
+		Input string
+	}{
+		{"5"},
+		{"420.69"},
+		{`"Hello there"`},
+		{"true"},
 	}
 
-	prog, err := p.Parse()
-	if err != nil {
-		t.Fatalf("Error: parser encountered an error - %s", err)
-	}
+	for i, tt := range tests {
+		l := lexer.New(tt.Input)
+		p, err := New(l)
+		if err != nil {
+			t.Errorf("Error on statement %d", i)
+			t.Errorf("Error: lexer encountered an error - %s", err)
+			continue
+		}
 
-	if len := len(prog.Statements); len != 1 {
-		t.Fatalf("Not enough statements, got: %d", len)
-	}
+		prog, err := p.Parse()
+		if err != nil {
+			t.Errorf("Error on statement %d", i)
+			t.Errorf("Error: parser encountered an error - %s", err)
+			continue
+		}
 
-	if stmt, ok := prog.Statements[0].(*ast.ExprStatement); ok {
-		if intlit, ok := stmt.Expression.(*ast.Int); ok {
-			if intlit.Inner != 5 {
-				t.Fatalf("Integer is not 5, got %d", intlit.Inner)
+		if len := len(prog.Statements); len != 1 {
+			t.Errorf("Error on statement %d", i)
+			t.Errorf("Wrong statement count: expected 1, got: %d", len)
+			continue
+		}
+
+		if stmt, ok := prog.Statements[0].(*ast.ExprStatement); ok {
+			switch i {
+			case 0:
+				intexpr, ok := stmt.Expression.(*ast.Int)
+				if !ok {
+					t.Errorf("Statement 0 is not an int, got %T", stmt.Expression)
+					continue
+				}
+				if intexpr.Inner != 5 {
+					t.Errorf("Int value is not 5: got %d", intexpr.Inner)
+				}
+			case 1:
+				fltexpr, ok := stmt.Expression.(*ast.Flt)
+				if !ok {
+					t.Errorf("Statement 1 is not a flt, got %T", stmt.Expression)
+					continue
+				}
+				if fltexpr.Inner != 420.69 {
+					t.Errorf("Flt value is not 420.69: got %f", fltexpr.Inner)
+				}
+			case 2:
+				strexpr, ok := stmt.Expression.(*ast.Str)
+				if !ok {
+					t.Errorf("Statement 2 is not a Str, got %T", stmt.Expression)
+					continue
+				}
+				if strexpr.Inner != "Hello there" {
+					t.Errorf("Str value does not match: got %s", strexpr.Inner)
+				}
+			case 3:
+				boolexpr, ok := stmt.Expression.(*ast.Bool)
+				if !ok {
+					t.Errorf("Statement 3 is not a Bool, got %T", stmt.Expression)
+					continue
+				}
+				if boolexpr.Inner != true {
+					t.Errorf("Bool value does not match")
+				}
+			default:
+				t.Fatal("How the hell did you even get here?")
 			}
 		} else {
-			t.Fatalf("Expression is not an integer")
+			t.Fatalf("statement is not an expression statement")
 		}
-	} else {
-		t.Fatalf("statement is not an expression statment")
 	}
+
 }
 
 func TestPrefixExpr(t *testing.T) {
