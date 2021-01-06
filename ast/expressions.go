@@ -170,3 +170,25 @@ func strFromLit(raw string) Literal {
 	// todo: add method to parse escaped chars
 	return &Str{Inner: raw}
 }
+
+//! Bool
+
+// Bool represents a boolean literal in the Monkey AST
+type Bool struct {
+	Token lexer.Token
+	Inner bool
+}
+
+// Literal implements Literal for Bool
+func (b *Bool) Literal()        {}
+func (b *Bool) expressionNode() {}
+
+// TokenLiteral implements Node for Bool
+func (b *Bool) TokenLiteral() string {
+	return b.Token.Literal
+}
+
+// TokenLiteral implements Node for Bool
+func (b *Bool) String() string {
+	return b.Token.Literal
+}
