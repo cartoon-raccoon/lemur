@@ -266,6 +266,9 @@ func (l *Lexer) nextChar() {
 	//have reached EOF
 	if l.readPos >= len(l.input) {
 		l.ch = 0
+		if l.readPos == len(l.input) {
+			l.pos = l.readPos
+		}
 	} else {
 		l.ch = l.input[l.readPos]
 		l.pos = l.readPos
