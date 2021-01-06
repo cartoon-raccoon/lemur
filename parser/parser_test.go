@@ -149,7 +149,7 @@ func TestIntExpr(t *testing.T) {
 }
 
 func TestPrefixExpr(t *testing.T) {
-	input := "-5 !hello -420.69"
+	input := "-5; !hello; -420.69;"
 
 	l := lexer.New(input)
 	p, err := New(l)
@@ -174,23 +174,91 @@ func TestPrefixExpr(t *testing.T) {
 	}
 
 	for i, stmt := range prog.Statements {
-		if !testPrefixExpr(t, stmt, expected[i].Token, expected[i].String) {
+		if !testPrefixExpr(t, stmt, expected[i].Token, expected[i].String, i) {
 			return
 		}
 	}
 }
 
-func testPrefixExpr(t *testing.T, stmt ast.Statement, tt string, right string) bool {
+func testPrefixExpr(t *testing.T, stmt ast.Statement, tt string, right string, i int) bool {
 	exstmt, ok := stmt.(*ast.ExprStatement)
 	if !ok {
-		t.Fatalf("statement is not expression statement, got %s", stmt.String())
+		t.Fatalf("statement %d is not expression statement, got %s", i, stmt.String())
 	}
 	pexpr, ok := exstmt.Expression.(*ast.PrefixExpr)
 	if !ok {
-		t.Fatalf("statement is not prefix expression, got %s", exstmt.String())
+		t.Fatalf("statement %d is not prefix expression, got %s", i, exstmt.String())
 	}
 	if pexpr.Token.Type != tt || pexpr.String() != right {
 		t.Errorf("got wrong type or expr: %s", pexpr.String())
 	}
 	return true
+}
+
+func TestInfixExpr(t *testing.T) {
+	infixTests := []struct {
+		Input    string
+		Left     int64
+		Operator string
+		Right    int64
+	}{
+		{"5 + 5;", 5, "+", 5},
+		{"5 - 5;", 5, "-", 5},
+		{"5 * 5;", 5, "*", 5},
+		{"5 / 5;", 5, "/", 5},
+		{"5 < 5;", 5, "<", 5},
+		{"5 > 5;", 5, ">", 5},
+		{"5 <= 5;", 5, "<=", 5},
+		{"5 >= 5;", 5, ">=", 5},
+		{"5 != 5;", 5, "!=", 5},
+		{"5 == 5;", 5, "==", 5},
+	}
+
+	for i, tt := range infixTests {
+		l := lexer.New(tt.Input)
+		p, err := New(l)
+		if err != nil {
+			t.Fatalf("Error parsing input")
+		}
+		prog, err := p.Parse()
+		if err != nil {
+			t.Fatalf("Error parsing program: %s", err)
+		}
+		if prog == nil {
+			t.Fatalf("AST could not be generated")
+		}
+		if len := len(prog.Statements); len != 1 {
+			t.Errorf("wrong statement count for program %d: expected 1, got %d", i, len)
+			continue
+		}
+		exprstmt, ok := prog.Statements[0].(*ast.ExprStatement)
+		if !ok {
+			t.Errorf("statement %d is not an expression statement", i)
+			continue
+		}
+		expr, ok := exprstmt.Expression.(*ast.InfixExpr)
+		if !ok {
+			t.Errorf("expression of stmt %d is not infix expression", i)
+			continue
+		}
+		left, lok := expr.Left.(*ast.Int)
+		right, rok := expr.Right.(*ast.Int)
+		if !lok || !rok {
+			t.Errorf("one of the sides of statement %d is not an Int", i)
+			t.Errorf("left side: %s", left.String())
+			t.Errorf("right side: %s", right.String())
+			continue
+		}
+		if left.Inner != tt.Left || right.Inner != tt.Right {
+			t.Errorf("incorrect literal for statement %d", i)
+			t.Errorf("left side: %d", left.Inner)
+			t.Errorf("right side: %d", right.Inner)
+		}
+		if expr.Operator != tt.Operator {
+			t.Errorf("operator for statement %d does not match", i)
+			t.Errorf("expected %s, got %s", tt.Operator, expr.Operator)
+		}
+
+		t.Logf("program %d passed!", i)
+	}
 }

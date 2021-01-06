@@ -41,6 +41,26 @@ const (
 	CALL
 )
 
+var precedences = map[string]int{
+	lexer.EQ:  EQUALS,
+	lexer.NE:  EQUALS,
+	lexer.LT:  COMPARE,
+	lexer.GT:  COMPARE,
+	lexer.LE:  COMPARE,
+	lexer.GE:  COMPARE,
+	lexer.ADD: SUM,
+	lexer.SUB: SUM,
+	lexer.MUL: PRODUCT,
+	lexer.DIV: PRODUCT,
+}
+
+func getPrecedence(tt string) int {
+	if pre, ok := precedences[tt]; ok {
+		return pre
+	}
+	return LOWEST
+}
+
 //New - returns a new Parser
 func New(l *lexer.Lexer) (*Parser, error) {
 	p := &Parser{lexer: l}
@@ -55,12 +75,26 @@ func New(l *lexer.Lexer) (*Parser, error) {
 		return p, err2
 	}
 
+	// Registering prefix parse functions
 	p.prefixParseFns = make(map[string]prefixParseFn)
 	p.registerPrefixFn(lexer.IDENT, p.parseIdentifier)
 	p.registerPrefixFn(lexer.INTLIT, p.parseIntLiteral)
 	p.registerPrefixFn(lexer.FLTLIT, p.parseFltLiteral)
 	p.registerPrefixFn(lexer.BANG, p.parsePrefixExpr)
 	p.registerPrefixFn(lexer.SUB, p.parsePrefixExpr)
+
+	// Registering infix parse functions
+	p.infixParseFns = make(map[string]infixParseFn)
+	p.registerInfixFn(lexer.ADD, p.parseInfixExpr)
+	p.registerInfixFn(lexer.SUB, p.parseInfixExpr)
+	p.registerInfixFn(lexer.MUL, p.parseInfixExpr)
+	p.registerInfixFn(lexer.DIV, p.parseInfixExpr)
+	p.registerInfixFn(lexer.LE, p.parseInfixExpr)
+	p.registerInfixFn(lexer.GE, p.parseInfixExpr)
+	p.registerInfixFn(lexer.LT, p.parseInfixExpr)
+	p.registerInfixFn(lexer.GT, p.parseInfixExpr)
+	p.registerInfixFn(lexer.EQ, p.parseInfixExpr)
+	p.registerInfixFn(lexer.NE, p.parseInfixExpr)
 
 	return p, nil
 }
@@ -173,6 +207,17 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 	leftExp := prefix()
 
+	for !p.nextTokenIs(lexer.SEMICOL) && precedence < p.peekPrecedence() {
+		infix := p.infixParseFns[p.next.Type]
+		if infix == nil {
+			return leftExp
+		}
+
+		p.advance()
+
+		leftExp = infix(leftExp)
+	}
+
 	return leftExp
 }
 
@@ -218,12 +263,37 @@ func (p *Parser) parsePrefixExpr() ast.Expression {
 	return expression
 }
 
+func (p *Parser) parseInfixExpr(left ast.Expression) ast.Expression {
+	expr := &ast.InfixExpr{
+		Token:    p.current,
+		Operator: p.current.Literal,
+		Left:     left,
+	}
+
+	precedence := p.curPrecedence()
+	p.advance()
+	expr.Right = p.parseExpression(precedence)
+	if expr.Right == nil {
+		//todo: return error
+		return nil
+	}
+	return expr
+}
+
 func (p *Parser) registerPrefixFn(tt string, fn prefixParseFn) {
 	p.prefixParseFns[tt] = fn
 }
 
 func (p *Parser) registerInfixFn(tt string, fn infixParseFn) {
 	p.infixParseFns[tt] = fn
+}
+
+func (p *Parser) curPrecedence() int {
+	return getPrecedence(p.current.Type)
+}
+
+func (p *Parser) peekPrecedence() int {
+	return getPrecedence(p.next.Type)
 }
 
 func (p *Parser) curTokenIs(t string) bool {
