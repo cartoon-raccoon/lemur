@@ -58,6 +58,9 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.prefixParseFns = make(map[string]prefixParseFn)
 	p.registerPrefixFn(lexer.IDENT, p.parseIdentifier)
 	p.registerPrefixFn(lexer.INTLIT, p.parseIntLiteral)
+	p.registerPrefixFn(lexer.FLTLIT, p.parseFltLiteral)
+	p.registerPrefixFn(lexer.BANG, p.parsePrefixExpr)
+	p.registerPrefixFn(lexer.SUB, p.parsePrefixExpr)
 
 	return p, nil
 }
@@ -111,14 +114,10 @@ func (p *Parser) parseLetStatement() (*ast.LetStatement, error) {
 		}
 	}
 
-	p.advance() //todo: parse expression here
-	if p.next.Type != lexer.INTLIT {
-		panic(fmt.Sprintf("unexpected token, got %s", p.next.Type))
-	}
-	p.advance()
-	if p.next.Type != lexer.SEMICOL {
-		panic(fmt.Sprintf("unexpected token, got %s", p.next.Type))
-	}
+	// fixme: a bit hacky
+	p.advance() // p.current is now assign, p.next is expr start
+	p.advance() // p.current is now expr start
+
 	val := p.parseExpression(LOWEST)
 	if val == nil {
 		return stmt, Err{
@@ -190,6 +189,33 @@ func (p *Parser) parseIntLiteral() ast.Expression {
 	}
 	lit.Inner = value
 	return lit
+}
+
+func (p *Parser) parseFltLiteral() ast.Expression {
+	lit := &ast.Flt{Token: p.current}
+	value, err := strconv.ParseFloat(p.current.Literal, 64)
+	if err != nil {
+		return nil
+	}
+	lit.Inner = value
+	return lit
+}
+
+func (p *Parser) parsePrefixExpr() ast.Expression {
+	expression := &ast.PrefixExpr{
+		Token:    p.current,
+		Operator: p.current.Literal,
+	}
+
+	p.advance() // move the next expression into current
+
+	expression.Right = p.parseExpression(PREFIX)
+
+	if expression.Right == nil {
+		// todo: return error
+		return nil
+	}
+	return expression
 }
 
 func (p *Parser) registerPrefixFn(tt string, fn prefixParseFn) {

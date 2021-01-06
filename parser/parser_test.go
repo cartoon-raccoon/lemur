@@ -147,3 +147,50 @@ func TestIntExpr(t *testing.T) {
 		t.Fatalf("statement is not an expression statment")
 	}
 }
+
+func TestPrefixExpr(t *testing.T) {
+	input := "-5 !hello -420.69"
+
+	l := lexer.New(input)
+	p, err := New(l)
+	if err != nil {
+		t.Fatalf("Could not generate AST; %s", err)
+	}
+	prog, err := p.Parse()
+
+	expected := []struct {
+		Token    string
+		Operator string
+		Right    ast.Expression
+		String   string
+	}{
+		{lexer.SUB, "-", &ast.Int{Inner: 5}, "-5"},
+		{lexer.BANG, "!", &ast.Identifier{Value: "hello"}, "!hello"},
+		{lexer.SUB, "-", &ast.Flt{Inner: 420.69}, "-420.69"},
+	}
+
+	if prog == nil {
+		t.Fatalf("Invalid program")
+	}
+
+	for i, stmt := range prog.Statements {
+		if !testPrefixExpr(t, stmt, expected[i].Token, expected[i].String) {
+			return
+		}
+	}
+}
+
+func testPrefixExpr(t *testing.T, stmt ast.Statement, tt string, right string) bool {
+	exstmt, ok := stmt.(*ast.ExprStatement)
+	if !ok {
+		t.Fatalf("statement is not expression statement, got %s", stmt.String())
+	}
+	pexpr, ok := exstmt.Expression.(*ast.PrefixExpr)
+	if !ok {
+		t.Fatalf("statement is not prefix expression, got %s", exstmt.String())
+	}
+	if pexpr.Token.Type != tt || pexpr.String() != right {
+		t.Errorf("got wrong type or expr: %s", pexpr.String())
+	}
+	return true
+}
