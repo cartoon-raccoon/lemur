@@ -7,6 +7,8 @@ import (
 	"github.com/cartoon-raccoon/monkey-jit/lexer"
 )
 
+//*----------| Identifier |----------*/
+
 // Identifier - represents a name bound to a function or a variable
 type Identifier struct {
 	Token lexer.Token
@@ -24,6 +26,8 @@ func (i *Identifier) TokenLiteral() string {
 func (i *Identifier) String() string {
 	return i.Value
 }
+
+//*----------| PrefixExpr |----------*/
 
 // PrefixExpr represents a prefixed expression, such as ! or -
 type PrefixExpr struct {
@@ -49,12 +53,44 @@ func (pe *PrefixExpr) String() string {
 	return out.String()
 }
 
+//*----------| InfixExpr |----------*/
+
+// InfixExpr represents an expression with an infixed operator
+type InfixExpr struct {
+	Token    lexer.Token
+	Left     Expression
+	Operator string
+	Right    Expression
+}
+
+func (ie *InfixExpr) expressionNode() {}
+
+// TokenLiteral implements Node for InfixExpr
+func (ie *InfixExpr) TokenLiteral() string {
+	return ie.Token.Literal
+}
+
+// String implements Node InfixExpr
+func (ie *InfixExpr) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(" + ie.Left.String())
+	out.WriteString(" " + ie.Operator + " ")
+	out.WriteString(ie.Right.String() + ")")
+
+	return out.String()
+}
+
+//*----------| Literals |----------*/
+
 // Literal defines a literal in Monkey: string, int or float
 type Literal interface {
 	Node
 	Literal()
 	String() string
 }
+
+//! Int
 
 // Int represents an integer literal in the Monkey AST
 type Int struct {
@@ -82,6 +118,8 @@ func intFromRaw(raw string) Literal {
 	return &Int{Inner: num}
 }
 
+//! Flt
+
 // Flt represents a float literal in the Monkey AST
 type Flt struct {
 	Token lexer.Token
@@ -107,6 +145,8 @@ func fltFromRaw(raw string) Literal {
 	}
 	return &Flt{Inner: num}
 }
+
+//! Str
 
 // Str represents a string literal in the Monkey AST
 type Str struct {
