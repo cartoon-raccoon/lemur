@@ -82,3 +82,29 @@ func (rs *ReturnStatement) String() string {
 	return out.String()
 
 }
+
+// BlockStatement represents a block of statements surrounded by braces
+type BlockStatement struct {
+	Token      lexer.Token
+	Statements []Statement
+}
+
+func (bs *BlockStatement) statementNode() {}
+
+// TokenLiteral implements Node for BlockStatement
+func (bs *BlockStatement) TokenLiteral() string {
+	return bs.Token.Literal
+}
+
+// String implements Node for BlockStatement
+func (bs *BlockStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("{")
+	for _, s := range bs.Statements {
+		out.WriteString(s.String())
+	}
+	out.WriteString("}")
+
+	return out.String()
+}

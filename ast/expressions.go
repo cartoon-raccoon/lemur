@@ -81,6 +81,39 @@ func (ie *InfixExpr) String() string {
 	return out.String()
 }
 
+//*----------| IfExpression |----------*/
+
+// IfExpression represents an if statement/expr in Monkey
+type IfExpression struct {
+	Token       lexer.Token
+	Condition   Expression
+	Result      *BlockStatement
+	Alternative *BlockStatement
+}
+
+func (ie *IfExpression) expressionNode() {}
+
+// TokenLiteral implements Node for IfExpression
+func (ie *IfExpression) TokenLiteral() string {
+	return ie.Token.Literal
+}
+
+// String implements Node for IfExpression
+func (ie *IfExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("if (")
+	out.WriteString(ie.Condition.String())
+	out.WriteString(") ")
+	out.WriteString(ie.Result.String())
+	if ie.Alternative != nil {
+		out.WriteString("else ")
+		out.WriteString(ie.Alternative.String())
+	}
+
+	return out.String()
+}
+
 //*----------| Literals |----------*/
 
 // Literal defines a literal in Monkey: string, int or float
