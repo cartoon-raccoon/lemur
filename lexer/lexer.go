@@ -63,11 +63,16 @@ func (l *Lexer) NextToken() (Token, error) {
 
 	case l.ch == '-':
 		l.nextChar()
-		if l.ch == '=' {
+		switch l.ch {
+		case '=':
 			l.nextChar()
 			return newToken(SUBASSIGN, SUBASSIGN, l.line, l.col, l.context), nil
+		case '>':
+			l.nextChar()
+			return newToken(RETSIG, RETSIG, l.line, l.col, l.context), nil
+		default:
+			return newToken(SUB, SUB, l.line, l.col, l.context), nil
 		}
-		return newToken(SUB, SUB, l.line, l.col, l.context), nil
 
 	case l.ch == '*':
 		l.nextChar()

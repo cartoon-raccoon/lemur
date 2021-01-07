@@ -115,6 +115,7 @@ const (
 	FUNCTION = "fn"
 	LET      = "let"
 	RETURN   = "return"
+	RETSIG   = "->"
 	IF       = "if"
 	ELSE     = "else"
 	WHILE    = "while"
