@@ -79,3 +79,23 @@ func (p *Parser) parseExprStatement() (*ast.ExprStatement, error) {
 
 	return stmt, nil
 }
+
+func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
+	block := &ast.BlockStatement{Token: p.current}
+	block.Statements = []ast.Statement{}
+
+	p.advance()
+
+	for !p.curTokenIs(lexer.RBRACE) && !p.curTokenIs(lexer.EOF) {
+		stmt, err := p.parseStatement()
+		if err != nil {
+			return block, err
+		}
+		if stmt != nil {
+			block.Statements = append(block.Statements, stmt)
+		}
+		p.advance()
+	}
+
+	return block, nil
+}

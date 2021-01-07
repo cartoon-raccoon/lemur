@@ -93,3 +93,47 @@ func (p *Parser) parseInfixExpr(left ast.Expression) ast.Expression {
 	}
 	return expr
 }
+
+func (p *Parser) parseIfExpression() ast.Expression {
+	expr := &ast.IfExpression{Token: p.current}
+
+	if !p.nextTokenIs(lexer.LPAREN) {
+		// todo: return error
+		return nil
+	}
+
+	p.advance()
+	expr.Condition = p.parseExpression(LOWEST)
+
+	if !p.nextTokenIs(lexer.RPAREN) {
+		return nil
+	}
+	if !p.nextTokenIs(lexer.LBRACE) {
+		return nil
+	}
+
+	res, err := p.parseBlockStatement()
+	if err != nil {
+		// todo: return error
+		return nil
+	}
+
+	expr.Result = res
+
+	if p.nextTokenIs(lexer.ELSE) {
+		p.advance()
+
+		if !p.nextTokenIs(lexer.LBRACE) {
+			return nil
+		}
+
+		alt, err := p.parseBlockStatement()
+		if err != nil {
+			return nil
+		}
+
+		expr.Alternative = alt
+	}
+
+	return expr
+}
