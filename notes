@@ -3,6 +3,10 @@ Add method to parse string literals and handle escaped characters
 Implement stripping comments
 Add support for hex and binary numlits
 Add support for `else if` branches
+Add infix parsing for bitwise and bitshift operators
+Add infix parsing for op-assign operators
+
+//*--------------| GRAMMAR |--------------*/
 
 Legend:
 - # -> more than one
@@ -13,6 +17,7 @@ All other symbols are recognized tokens as part of monkey's grammar
 
 Statements [STMT]:
 Any expression can be a statement
+[IMPORT] Import Statements -> import IDENT | ( #IDENT, )
 [LET] Let Statement -> let IDENT = EXPR;
 [RETURN] Return Statement -> return EXPR;
 [BLOCK] Block Statements -> { #STMT }
@@ -22,10 +27,14 @@ Any expression can be a statement
 
 Expressions [EXPR]:
 [LIT] Literals -> STRLIT | NUMLIT | BOOL | FNLIT
-[FNCAL] Function calls -> IDENT()
+[LIST] List literals -> IDENT[ ~#EXPR~? ]
+[MAP] Map literals -> map{TYPE, TYPE}{ #EXPR, #EXPR }
+[CLOS] Closures -> fn( ~#EXPR~? ) ~-> TYPE~? { #STMT }
+[FNCAL] Function calls -> IDENT( ~#EXPR~? )
+[METHD] Method calls -> IDENT.FNCAL
 [IFEXP] If Expressions -> if (EXPR) { #STMT } else { #STMT }
 
 Data [DATA]:
 [CLASS] Classes -> class IDENT { ... }
-[FNLIT] Function Literals -> fn IDENT( #EXPR ) -> TYPE { #STMT .. ~return EXPR~? }
+[FNLIT] Function Literals -> fn IDENT( ~#EXPR~? ) ~-> TYPE~? { #STMT .. ~return EXPR~? }
 [TRAIT] Traits -> trait IDENT { [FNSIG] }
