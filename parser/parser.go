@@ -85,6 +85,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerPrefixFn(lexer.FALSE, p.parseBoolLiteral)
 	p.registerPrefixFn(lexer.BANG, p.parsePrefixExpr)
 	p.registerPrefixFn(lexer.SUB, p.parsePrefixExpr)
+	p.registerPrefixFn(lexer.LPAREN, p.parseGroupedExpr)
 
 	// Registering infix parse functions
 	p.infixParseFns = make(map[string]infixParseFn)
@@ -263,6 +264,18 @@ func (p *Parser) parseBoolLiteral() ast.Expression {
 	}
 	lit.Inner = value
 	return lit
+}
+
+func (p *Parser) parseGroupedExpr() ast.Expression {
+	p.advance()
+
+	expr := p.parseExpression(LOWEST)
+
+	if !p.nextTokenIs(lexer.RPAREN) {
+		return nil
+	}
+
+	return expr
 }
 
 func (p *Parser) parsePrefixExpr() ast.Expression {
