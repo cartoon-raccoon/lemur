@@ -2,12 +2,30 @@ todo:
 Add method to parse string literals and handle escaped characters
 Implement stripping comments
 Add support for hex and binary numlits
+Add support for `else if` branches
 
-Statements:
+Legend:
+- # -> more than one
+- ~~? -> optional
+- | -> or
+
+All other symbols are recognized tokens as part of monkey's grammar
+
+Statements [STMT]:
 Any expression can be a statement
-Let Statement - let IDENT EQUALS (EXPR)
-Return Statement - return (EXPR)
+[LET] Let Statement -> let IDENT = EXPR;
+[RETURN] Return Statement -> return EXPR;
+[BLOCK] Block Statements -> { #STMT }
+[FNSIG] Function Signatures -> fn IDENT(#EXPR) -> TYPE;
+[FOR] For loops -> for IDENT in EXPR { #STMT }
+[WHILE] While loops -> while EXPR { #STMT }
 
-Expressions:
-Literals - STRLIT | NUMLIT | function literals
-Function calls - function()
+Expressions [EXPR]:
+[LIT] Literals -> STRLIT | NUMLIT | BOOL | FNLIT
+[FNCAL] Function calls -> IDENT()
+[IFEXP] If Expressions -> if (EXPR) { #STMT } else { #STMT }
+
+Data [DATA]:
+[CLASS] Classes -> class IDENT { ... }
+[FNLIT] Function Literals -> fn IDENT( #EXPR ) -> TYPE { #STMT .. ~return EXPR~? }
+[TRAIT] Traits -> trait IDENT { [FNSIG] }
