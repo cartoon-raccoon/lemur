@@ -416,7 +416,13 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 }
 
 func TestIfExpression(t *testing.T) {
-	input := "if (x < y || !false) { return (x + y) * 2; } else { return x * y; }"
+	input := `if (x < y || !false) { 
+		return (x + y) * 2; 
+	} else if (x * y == 5) { 
+		return x * y; 
+	}
+	
+	if (!hello) { let night = true; }`
 
 	// lexing
 	l := lexer.New(input)
@@ -442,8 +448,8 @@ func TestIfExpression(t *testing.T) {
 	}
 
 	// testing top level statements
-	if len := len(prog.Statements); len != 1 {
-		t.Errorf("Expected 1 statement, got %d", len)
+	if len := len(prog.Statements); len != 2 {
+		t.Errorf("Expected 2 statements, got %d", len)
 		for _, stmt := range prog.Statements {
 			if stmt == nil {
 				t.Log("<nil>")
@@ -485,7 +491,17 @@ func TestIfExpression(t *testing.T) {
 		t.Fatalf("Alternative should not be nil")
 	}
 
-	if len := len(ifexpr.Alternative.Statements); len != 1 {
+	alt, ok := ifexpr.Alternative.(*ast.IfExpression)
+	if !ok {
+		t.Fatalf("Alternative is not ifexpr")
+	}
+
+	cond, ok = alt.Condition.(*ast.InfixExpr)
+	if !ok {
+		t.Fatalf("condition is not an infix expr")
+	}
+
+	if len := len(alt.Result.Statements); len != 1 {
 		t.Errorf("Incorrect statements in blockstmt, got %d", len)
 		t.Logf(ifexpr.Result.TokenLiteral())
 		for _, stmt := range ifexpr.Result.Statements {
