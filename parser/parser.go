@@ -36,6 +36,8 @@ const (
 	PRODUCT
 	// BITWISE - <<, >>, &, |, ~
 	BITWISE
+	// LOGIC - &&, ||
+	LOGIC
 	// PREFIX - -x or !x
 	PREFIX
 	// CALL - a function call
@@ -58,6 +60,8 @@ var precedences = map[string]int{
 	lexer.BWNOT: BITWISE,
 	lexer.BSR:   BITWISE,
 	lexer.BSL:   BITWISE,
+	lexer.LOR:   LOGIC,
+	lexer.LAND:  LOGIC,
 }
 
 func getPrecedence(tt string) int {
@@ -92,6 +96,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerPrefixFn(lexer.BANG, p.parsePrefixExpr)
 	p.registerPrefixFn(lexer.SUB, p.parsePrefixExpr)
 	p.registerPrefixFn(lexer.LPAREN, p.parseGroupedExpr)
+	p.registerPrefixFn(lexer.IF, p.parseIfExpression)
 
 	// Registering infix parse functions
 	p.infixParseFns = make(map[string]infixParseFn)
@@ -105,6 +110,13 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerInfixFn(lexer.GT, p.parseInfixExpr)
 	p.registerInfixFn(lexer.EQ, p.parseInfixExpr)
 	p.registerInfixFn(lexer.NE, p.parseInfixExpr)
+	p.registerInfixFn(lexer.BSL, p.parseInfixExpr)
+	p.registerInfixFn(lexer.BSR, p.parseInfixExpr)
+	p.registerInfixFn(lexer.BWAND, p.parseInfixExpr)
+	p.registerInfixFn(lexer.BWOR, p.parseInfixExpr)
+	p.registerInfixFn(lexer.BWNOT, p.parseInfixExpr)
+	p.registerInfixFn(lexer.LAND, p.parseInfixExpr)
+	p.registerInfixFn(lexer.LOR, p.parseInfixExpr)
 
 	return p, nil
 }
