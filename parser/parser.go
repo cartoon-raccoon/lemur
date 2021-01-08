@@ -45,23 +45,24 @@ const (
 )
 
 var precedences = map[string]int{
-	lexer.EQ:    EQUALS,
-	lexer.NE:    EQUALS,
-	lexer.LT:    COMPARE,
-	lexer.GT:    COMPARE,
-	lexer.LE:    COMPARE,
-	lexer.GE:    COMPARE,
-	lexer.ADD:   SUM,
-	lexer.SUB:   SUM,
-	lexer.MUL:   PRODUCT,
-	lexer.DIV:   PRODUCT,
-	lexer.BWAND: BITWISE,
-	lexer.BWOR:  BITWISE,
-	lexer.BWNOT: BITWISE,
-	lexer.BSR:   BITWISE,
-	lexer.BSL:   BITWISE,
-	lexer.LOR:   LOGIC,
-	lexer.LAND:  LOGIC,
+	lexer.EQ:     EQUALS,
+	lexer.NE:     EQUALS,
+	lexer.LT:     COMPARE,
+	lexer.GT:     COMPARE,
+	lexer.LE:     COMPARE,
+	lexer.GE:     COMPARE,
+	lexer.ADD:    SUM,
+	lexer.SUB:    SUM,
+	lexer.MUL:    PRODUCT,
+	lexer.DIV:    PRODUCT,
+	lexer.BWAND:  BITWISE,
+	lexer.BWOR:   BITWISE,
+	lexer.BWNOT:  BITWISE,
+	lexer.BSR:    BITWISE,
+	lexer.BSL:    BITWISE,
+	lexer.LOR:    LOGIC,
+	lexer.LAND:   LOGIC,
+	lexer.LPAREN: CALL,
 }
 
 func getPrecedence(tt string) int {
@@ -118,6 +119,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerInfixFn(lexer.BWNOT, p.parseInfixExpr)
 	p.registerInfixFn(lexer.LAND, p.parseInfixExpr)
 	p.registerInfixFn(lexer.LOR, p.parseInfixExpr)
+	p.registerInfixFn(lexer.LPAREN, p.parseFunctionCall)
 
 	return p, nil
 }

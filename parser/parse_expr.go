@@ -209,3 +209,37 @@ func (p *Parser) parseFunctionParams() []*ast.Identifier {
 
 	return identifiers
 }
+
+func (p *Parser) parseFunctionCall(fn ast.Expression) ast.Expression {
+	exp := &ast.FunctionCall{Token: p.current, Ident: fn}
+	exp.Params = p.parseCallArguments()
+
+	return exp
+}
+
+func (p *Parser) parseCallArguments() []ast.Expression {
+	args := []ast.Expression{}
+
+	if p.nextTokenIs(lexer.RPAREN) {
+		p.advance()
+		return args
+	}
+
+	p.advance()
+	args = append(args, p.parseExpression(LOWEST))
+
+	for p.nextTokenIs(lexer.COMMA) {
+		p.advance()
+		p.advance()
+		args = append(args, p.parseExpression(LOWEST))
+	}
+
+	if !p.nextTokenIs(lexer.RPAREN) {
+		//todo: return err
+		return nil
+	}
+
+	p.advance()
+
+	return args
+}
