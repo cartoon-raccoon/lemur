@@ -509,3 +509,56 @@ func TestIfExpression(t *testing.T) {
 		}
 	}
 }
+
+func TestFnLiteralParsing(t *testing.T) {
+	input := `fn(a, b) { let sum = x + y; }`
+	l := lexer.New(input)
+	p, err := New(l)
+	if err != nil {
+		t.Fatalf("Could not parse")
+	}
+	if p.current.Type != lexer.FUNCTION {
+		t.Fatalf("Current token is not fn, got %s", p.current.Type)
+	}
+	if p.next.Type != lexer.LPAREN {
+		t.Fatalf("Next token is not lparen, got %s", p.next.Type)
+	}
+	prog, err := p.Parse()
+
+	if len := len(prog.Statements); len != 1 {
+		t.Errorf("Expected 1 statement, got %d", len)
+		for _, stmt := range prog.Statements {
+			if stmt == nil {
+				t.Logf("<nil>")
+			} else {
+				t.Logf(stmt.TokenLiteral())
+			}
+			t.Logf("-------")
+		}
+		t.Fatalf("Aborting test")
+	}
+
+	expr, ok := prog.Statements[0].(*ast.ExprStatement)
+	if !ok {
+		t.Fatalf("statement is not exprstmt, got %s", expr)
+	}
+
+	fnexpr, ok := expr.Expression.(*ast.FnLiteral)
+	if !ok {
+		t.Fatalf("statement is not function literal, got %s", expr)
+	}
+
+	// testing the literal itself
+	if len := len(fnexpr.Params); len != 2 {
+		t.Errorf("expected 2 params, got %d", len)
+	}
+
+	if len := len(fnexpr.Body.Statements); len != 1 {
+		t.Errorf("expected 1 statement in body, got %d", len)
+	}
+
+	stmt, ok := fnexpr.Body.Statements[0].(*ast.LetStatement)
+	if !ok {
+		t.Fatalf("wrong statement, expected let, got %T", stmt)
+	}
+}
