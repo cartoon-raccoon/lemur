@@ -91,7 +91,9 @@ type IfExpression struct {
 	Token       lexer.Token
 	Condition   Expression
 	Result      *BlockStatement
-	Alternative *BlockStatement
+	Alternative Node //! I don't like using a Node here, find a better alternative
+	//* Alternative can only be *BlockStatement or *IfExpression
+	//* Must perform a runtime check
 }
 
 func (ie *IfExpression) expressionNode() {}

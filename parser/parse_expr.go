@@ -125,17 +125,22 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	if p.nextTokenIs(lexer.ELSE) {
 		p.advance()
 
-		if !p.nextTokenIs(lexer.LBRACE) {
+		if p.nextTokenIs(lexer.LBRACE) {
+			p.advance()
+
+			alt, err := p.parseBlockStatement()
+			if err != nil {
+				return nil
+			}
+			expr.Alternative = alt
+		} else if p.nextTokenIs(lexer.IF) {
+			p.advance()
+			expr.Alternative = p.parseIfExpression()
+		} else {
+			//todo: return err
 			return nil
 		}
-		p.advance()
 
-		alt, err := p.parseBlockStatement()
-		if err != nil {
-			return nil
-		}
-
-		expr.Alternative = alt
 	}
 
 	return expr
