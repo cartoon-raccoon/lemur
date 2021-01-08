@@ -3,6 +3,7 @@ package ast
 import (
 	"bytes"
 	"strconv"
+	"strings"
 
 	"github.com/cartoon-raccoon/monkey-jit/lexer"
 )
@@ -110,6 +111,39 @@ func (ie *IfExpression) String() string {
 		out.WriteString("else ")
 		out.WriteString(ie.Alternative.String())
 	}
+
+	return out.String()
+}
+
+//*----------| Fnliteral |----------*/
+
+// FnLiteral represents a function declaration in Monkey
+type FnLiteral struct {
+	Token  lexer.Token
+	Params []*Identifier
+	Body   *BlockStatement
+}
+
+func (fl *FnLiteral) expressionNode() {}
+
+// TokenLiteral implements Node for FnLiteral
+func (fl *FnLiteral) TokenLiteral() string {
+	return fl.Token.Literal
+}
+
+// String implements Node for FnLiteral
+func (fl *FnLiteral) String() string {
+	var out bytes.Buffer
+
+	params := []string{}
+
+	for _, p := range fl.Params {
+		params = append(params, p.String())
+	}
+	out.WriteString("fn(")
+	out.WriteString(strings.Join(params, ","))
+	out.WriteString(")")
+	out.WriteString(fl.Body.String())
 
 	return out.String()
 }
