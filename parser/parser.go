@@ -115,18 +115,33 @@ func (p *Parser) Parse() (*ast.Program, error) {
 	program.Statements = []ast.Statement{}
 
 	for !p.curTokenIs(lexer.EOF) {
-		stmt, err := p.parseStatement()
+		node, err := p.parseNode()
 		if err != nil {
 			return nil, err
 		}
-		program.Statements = append(program.Statements, stmt)
+		switch node.(type) {
+		case ast.Statement:
+			program.Statements = append(program.Statements, node.(ast.Statement))
+		case ast.Declaration:
+			switch node.(ast.Declaration).(type) {
+			case *ast.FunctionDecl:
+				program.Functions = append(program.Functions, *node.(ast.Declaration).(*ast.FunctionDecl))
+			default:
+				//todo: return err
+				return nil, nil
+			}
+		default:
+			//todo: return err
+			return nil, nil
+		}
+
 		p.advance()
 	}
 
 	return program, nil
 }
 
-func (p *Parser) parseStatement() (ast.Statement, error) {
+func (p *Parser) parseNode() (ast.Node, error) {
 	switch p.current.Type {
 	case lexer.LET:
 		return p.parseLetStatement()
@@ -144,7 +159,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 	leftExp := prefix()
 
-	for !p.nextTokenIs(lexer.SEMICOL) && precedence < p.peekPrecedence() {
+	for (!p.nextTokenIs(lexer.SEMICOL) || !p.nextTokenIs(lexer.COMMA)) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.next.Type]
 		if infix == nil {
 			return leftExp

@@ -87,12 +87,15 @@ func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
 	p.advance()
 
 	for !p.curTokenIs(lexer.RBRACE) && !p.curTokenIs(lexer.EOF) {
-		stmt, err := p.parseStatement()
+		node, err := p.parseNode()
 		if err != nil {
 			return block, err
 		}
-		if stmt != nil {
+		stmt, ok := node.(ast.Statement)
+		if stmt != nil && ok {
 			block.Statements = append(block.Statements, stmt)
+		} else {
+			//todo: return err
 		}
 		p.advance()
 	}
