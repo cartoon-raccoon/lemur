@@ -34,7 +34,11 @@ Expressions [EXPR]:
 [METHD] Method calls -> IDENT.FNCAL
 [IFEXP] If Expressions -> if (EXPR) { #STMT } else { #STMT }
 
-Data [DATA]:
+Declarations [DECL]:
 [CLASS] Classes -> class IDENT { ... }
 [FNLIT] Function Literals -> fn IDENT( ~#EXPR~? ) ~-> TYPE~? { #STMT .. ~return EXPR~? }
 [TRAIT] Traits -> trait IDENT { [FNSIG] }
+
+- The dot operator is only used to namespace classes and functions from different files
+- Functions cannot be declared within functions
+    - To declare callable functions within a function, use a closure
