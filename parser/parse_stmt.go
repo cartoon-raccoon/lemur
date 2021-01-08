@@ -52,11 +52,9 @@ func (p *Parser) parseLetStatement() (*ast.LetStatement, error) {
 func (p *Parser) parseReturnStatement() (*ast.ReturnStatement, error) {
 	stmt := &ast.ReturnStatement{Token: p.current}
 
-	p.advance()
+	p.advance() // p.current is now expr start
 
-	for !p.curTokenIs(lexer.SEMICOL) {
-		p.advance()
-	}
+	stmt.Value = p.parseExpression(LOWEST)
 
 	// if !p.nextTokenIs(lexer.SEMICOL) {
 	// 	return nil, Err{
@@ -64,6 +62,8 @@ func (p *Parser) parseReturnStatement() (*ast.ReturnStatement, error) {
 	// 		Con: p.next.Pos,
 	// 	}
 	// }
+
+	p.advance()
 
 	return stmt, nil
 }
