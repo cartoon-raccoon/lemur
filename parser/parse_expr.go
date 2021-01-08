@@ -57,6 +57,8 @@ func (p *Parser) parseGroupedExpr() ast.Expression {
 		return nil
 	}
 
+	p.advance()
+
 	return expr
 }
 
@@ -101,22 +103,22 @@ func (p *Parser) parseIfExpression() ast.Expression {
 		// todo: return error
 		return nil
 	}
-
 	p.advance()
+	// p.current is now LPAREN
+
 	expr.Condition = p.parseExpression(LOWEST)
 
-	if !p.nextTokenIs(lexer.RPAREN) {
-		return nil
-	}
 	if !p.nextTokenIs(lexer.LBRACE) {
 		return nil
 	}
+	p.advance()
 
 	res, err := p.parseBlockStatement()
 	if err != nil {
 		// todo: return error
 		return nil
 	}
+	// p.current is now RBRACE
 
 	expr.Result = res
 
@@ -126,6 +128,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 		if !p.nextTokenIs(lexer.LBRACE) {
 			return nil
 		}
+		p.advance()
 
 		alt, err := p.parseBlockStatement()
 		if err != nil {
