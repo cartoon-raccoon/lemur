@@ -152,6 +152,39 @@ func (fl *FnLiteral) String() string {
 	return out.String()
 }
 
+//*----------| FunctionCall |----------*/
+
+// FunctionCall defines a function call in Monkey
+type FunctionCall struct {
+	Token  lexer.Token
+	Ident  Expression
+	Params []Expression
+}
+
+func (fc *FunctionCall) expressionNode() {}
+
+// TokenLiteral implements Node for FunctionCall
+func (fc *FunctionCall) TokenLiteral() string {
+	return fc.Token.Literal
+}
+
+// String implements Node for FunctionCall
+func (fc *FunctionCall) String() string {
+	var out bytes.Buffer
+
+	params := []string{}
+
+	for _, p := range fc.Params {
+		params = append(params, p.String())
+	}
+	out.WriteString(fc.Ident.String())
+	out.WriteString("(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(")")
+
+	return out.String()
+}
+
 //*----------| Literals |----------*/
 
 // Literal defines a literal in Monkey: string, int or float
