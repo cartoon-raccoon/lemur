@@ -562,3 +562,56 @@ func TestFnLiteralParsing(t *testing.T) {
 		t.Fatalf("wrong statement, expected let, got %T", stmt)
 	}
 }
+
+func TestCallExpression(t *testing.T) {
+	input := `add(
+		1, 
+		2 * 3, 
+		fn(a,b) { a + b; },
+		hello("there", 6)
+	);`
+
+	l := lexer.New(input)
+	p, err := New(l)
+	if err != nil {
+		t.Fatalf("Error in parsing: %s", err)
+	}
+	if p == nil {
+		t.Fatalf("Could not parse AST")
+	}
+	if p.current.Type != lexer.IDENT {
+		t.Fatalf("Incorrect current token: got %s", p.current.Type)
+	}
+	if p.next.Type != lexer.LPAREN {
+		t.Fatalf("Incorrect next token: got %s", p.next.Type)
+	}
+
+	prog, err := p.Parse()
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	if len := len(prog.Statements); len != 1 {
+		t.Errorf("Expected 1 statement, got %d", len)
+		for _, stmt := range prog.Statements {
+			t.Logf(stmt.TokenLiteral())
+		}
+		// /t.Fatalf("Aborting test")
+	}
+	expr, ok := prog.Statements[0].(*ast.ExprStatement)
+	if !ok {
+		t.Fatalf("Expected expr stmt, got %T", expr)
+	}
+	call, ok := expr.Expression.(*ast.FunctionCall)
+	if !ok {
+		t.Fatalf("Expected function call, got %T", call)
+	}
+	ident, ok := call.Ident.(*ast.Identifier)
+	if !ok {
+		t.Errorf("Expected identifier as call name, got %T", ident)
+	}
+	if len := len(call.Params); len != 4 {
+		t.Errorf("Expected 4 parameters, got %d", len)
+		t.Logf("%d", p.current.Pos.Line)
+		t.Logf("%+v\n", call)
+	}
+}
