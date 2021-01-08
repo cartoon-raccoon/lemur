@@ -54,7 +54,7 @@ func (es *ExprStatement) String() string {
 	if es.Expression != nil {
 		out.WriteString(es.Expression.String())
 	}
-	return ""
+	return out.String()
 }
 
 // ReturnStatement - represents a return statement in the AST
