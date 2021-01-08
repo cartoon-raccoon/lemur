@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/cartoon-raccoon/monkey-jit/ast"
@@ -144,4 +145,67 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	}
 
 	return expr
+}
+
+func (p *Parser) parseFnLiteral() ast.Expression {
+	lit := &ast.FnLiteral{Token: p.current}
+
+	if p.current.Type != lexer.FUNCTION {
+		panic(fmt.Sprintf("Wrong token, got %s", p.current.Type))
+	}
+
+	if !p.nextTokenIs(lexer.LPAREN) {
+		//todo: return error
+		return nil
+	}
+
+	p.advance()
+	// p.current is now lparen
+
+	lit.Params = p.parseFunctionParams()
+	// p.next is now rparen
+
+	p.advance()
+	// p.next should now be lbrace
+	if p.nextTokenIs(lexer.LBRACE) {
+		p.advance()
+		body, err := p.parseBlockStatement()
+		if err != nil {
+			//todo: return err
+			return nil
+		}
+		lit.Body = body
+	}
+
+	return lit
+}
+
+func (p *Parser) parseFunctionParams() []*ast.Identifier {
+	identifiers := []*ast.Identifier{}
+
+	//p.current is lparen
+	if p.nextTokenIs(lexer.RPAREN) {
+		return identifiers
+	}
+
+	p.advance()
+	//p.current should now be IDENT
+
+	ident := &ast.Identifier{Token: p.current, Value: p.current.Literal}
+	identifiers = append(identifiers, ident)
+
+	// p.next should now be comma
+	for p.nextTokenIs(lexer.COMMA) {
+		p.advance() //p.current == comma
+		p.advance() //p.current == ident
+		ident = &ast.Identifier{Token: p.current, Value: p.current.Literal}
+		identifiers = append(identifiers, ident)
+	}
+
+	if !p.nextTokenIs(lexer.RPAREN) {
+		//todo: return error
+		return nil
+	}
+
+	return identifiers
 }

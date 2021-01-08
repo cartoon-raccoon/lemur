@@ -97,6 +97,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerPrefixFn(lexer.SUB, p.parsePrefixExpr)
 	p.registerPrefixFn(lexer.LPAREN, p.parseGroupedExpr)
 	p.registerPrefixFn(lexer.IF, p.parseIfExpression)
+	p.registerPrefixFn(lexer.FUNCTION, p.parseFnLiteral)
 
 	// Registering infix parse functions
 	p.infixParseFns = make(map[string]infixParseFn)
@@ -167,11 +168,12 @@ func (p *Parser) parseNode() (ast.Node, error) {
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixParseFns[p.current.Type]
 	if prefix == nil {
+		//todo: return error
 		return nil
 	}
 	leftExp := prefix()
 
-	for (!p.nextTokenIs(lexer.SEMICOL) || !p.nextTokenIs(lexer.COMMA)) && precedence < p.peekPrecedence() {
+	for !p.nextTokenIs(lexer.SEMICOL) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.next.Type]
 		if infix == nil {
 			return leftExp
