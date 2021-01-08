@@ -73,7 +73,10 @@ func TestReturnStatement(t *testing.T) {
 	}
 
 	if len := len(program.Statements); len != 3 {
-		t.Fatalf("Wrong number of statements: expected 3, got %d", len)
+		t.Errorf("Wrong number of statements: expected 3, got %d", len)
+		for _, stmt := range program.Statements {
+			t.Error(stmt.String())
+		}
 	}
 
 	for _, stmt := range program.Statements {
@@ -213,9 +216,9 @@ func TestPrefixExpr(t *testing.T) {
 		Right    ast.Expression
 		String   string
 	}{
-		{lexer.SUB, "-", &ast.Int{Inner: 5}, "-5"},
-		{lexer.BANG, "!", &ast.Identifier{Value: "hello"}, "!hello"},
-		{lexer.SUB, "-", &ast.Flt{Inner: 420.69}, "-420.69"},
+		{lexer.SUB, "-", &ast.Int{Inner: 5}, "(-5)"},
+		{lexer.BANG, "!", &ast.Identifier{Value: "hello"}, "(!hello)"},
+		{lexer.SUB, "-", &ast.Flt{Inner: 420.69}, "(-420.69)"},
 	}
 
 	if prog == nil {
@@ -309,5 +312,184 @@ func TestInfixExpr(t *testing.T) {
 		}
 
 		t.Logf("program %d passed!", i)
+	}
+}
+
+func TestOperatorPrecedenceParsing(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			"-a * b",
+			"((-a) * b)",
+		},
+		{
+			"!-a",
+			"(!(-a))",
+		},
+		{
+			"a + b + c",
+			"((a + b) + c)",
+		},
+		{
+			"a + b - c",
+			"((a + b) - c)",
+		},
+		{
+			"a * b * c",
+			"((a * b) * c)",
+		},
+		{
+			"a * b / c",
+			"((a * b) / c)",
+		},
+		{
+			"a + b / c",
+			"(a + (b / c))",
+		},
+		{
+			"a + b * c + d / e - f",
+			"(((a + (b * c)) + (d / e)) - f)",
+		},
+		{
+			"3 + 4; -5 * 5",
+			"(3 + 4)((-5) * 5)",
+		},
+		{
+			"5 > 4 == 3 < 4",
+			"((5 > 4) == (3 < 4))",
+		},
+		{
+			"5 < 4 != 3 > 4",
+			"((5 < 4) != (3 > 4))",
+		},
+		{
+			"3 + 4 * 5 == 3 * 1 + 4 * 5",
+			"((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+		},
+		{
+			"3 + 4 * 5 || 3 * 1 + 4 * 5",
+			"((3 + ((4 * (5 || 3)) * 1)) + (4 * 5))",
+		},
+		{
+			"1 + (2 + 3) + 4",
+			"((1 + (2 + 3)) + 4)",
+		},
+		{
+			"(5 + 5) * 2",
+			"((5 + 5) * 2)",
+		},
+		{
+			"2 / (5 + 5)",
+			"(2 / (5 + 5))",
+		},
+		{
+			"-(5 + 5)",
+			"(-(5 + 5))",
+		},
+		{
+			"!(true == true)",
+			"(!(true == true))",
+		},
+	}
+	for i, tt := range tests {
+		l := lexer.New(tt.input)
+		p, err := New(l)
+		if err != nil {
+			t.Fatalf("Test %d: Could not build parser", i)
+		}
+		prog, err := p.Parse()
+		if err != nil {
+			t.Fatalf("Test %d: Could not parse AST", i)
+		}
+		expr, ok := prog.Statements[0].(*ast.ExprStatement)
+		if !ok {
+			t.Errorf("Expected exprstatement, got %T", expr)
+		}
+		actual := prog.String()
+
+		if actual != tt.expected {
+			t.Errorf("Test %d: expected: %q, got: %q", i, tt.expected, actual)
+		}
+	}
+}
+
+func TestIfExpression(t *testing.T) {
+	input := "if (x < y || !false) { return (x + y) * 2; } else { return x * y; }"
+
+	// lexing
+	l := lexer.New(input)
+	p, err := New(l)
+	if err != nil {
+		t.Fatalf("Could not tokenize expression")
+	}
+	if p.current.Type != lexer.IF {
+		panic("wrong token")
+	}
+	if p.next.Type != lexer.LPAREN {
+		panic("wrong next token")
+	}
+
+	// parsing
+	prog, err := p.Parse()
+
+	if err != nil {
+		t.Fatalf("Error while parsing: %s", err)
+	}
+	if prog == nil {
+		t.Fatalf("Could not parse AST")
+	}
+
+	// testing top level statements
+	if len := len(prog.Statements); len != 1 {
+		t.Errorf("Expected 1 statement, got %d", len)
+		for _, stmt := range prog.Statements {
+			if stmt == nil {
+				t.Log("<nil>")
+			} else {
+				t.Logf(stmt.TokenLiteral())
+				t.Logf("%T", stmt)
+				t.Logf(stmt.String())
+				t.Logf("-------")
+			}
+		}
+		t.Fatalf("Aborting test")
+	}
+
+	// Asserting types, going down the tree
+	stmt, ok := prog.Statements[0].(*ast.ExprStatement)
+	if !ok {
+		t.Fatalf("Statement is not an expression: got %T", stmt)
+	}
+	ifexpr, ok := stmt.Expression.(*ast.IfExpression)
+	if !ok {
+		t.Fatalf("Expr is not an if expr: got %T", ifexpr)
+	}
+	cond, ok := ifexpr.Condition.(*ast.InfixExpr)
+	if !ok {
+		t.Fatalf("condition is not an infix expr")
+	}
+	if cond.Operator != lexer.LT {
+		t.Errorf("Wrong conditional operator")
+	}
+	if len := len(ifexpr.Result.Statements); len != 1 {
+		t.Errorf("Incorrect statements in blockstmt, got %d", len)
+		t.Logf(ifexpr.Result.TokenLiteral())
+		for _, stmt := range ifexpr.Result.Statements {
+			t.Logf(stmt.String())
+		}
+	}
+
+	if ifexpr.Alternative == nil {
+		t.Fatalf("Alternative should not be nil")
+	}
+
+	if len := len(ifexpr.Alternative.Statements); len != 1 {
+		t.Errorf("Incorrect statements in blockstmt, got %d", len)
+		t.Logf(ifexpr.Result.TokenLiteral())
+		for _, stmt := range ifexpr.Result.Statements {
+			t.Logf(stmt.String())
+		}
 	}
 }
