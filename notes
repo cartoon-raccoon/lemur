@@ -2,8 +2,6 @@ todo:
 Add method to parse string literals and handle escaped characters
 Implement stripping comments
 Add support for hex and binary numlits
-Add support for `else if` branches
-Add infix parsing for bitwise and bitshift operators
 Add infix parsing for op-assign operators
 
 //*--------------| GRAMMAR |--------------*/
