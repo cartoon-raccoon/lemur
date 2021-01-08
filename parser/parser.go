@@ -34,6 +34,8 @@ const (
 	SUM
 	// PRODUCT - a * b
 	PRODUCT
+	// BITWISE - <<, >>, &, |, ~
+	BITWISE
 	// PREFIX - -x or !x
 	PREFIX
 	// CALL - a function call
@@ -41,16 +43,21 @@ const (
 )
 
 var precedences = map[string]int{
-	lexer.EQ:  EQUALS,
-	lexer.NE:  EQUALS,
-	lexer.LT:  COMPARE,
-	lexer.GT:  COMPARE,
-	lexer.LE:  COMPARE,
-	lexer.GE:  COMPARE,
-	lexer.ADD: SUM,
-	lexer.SUB: SUM,
-	lexer.MUL: PRODUCT,
-	lexer.DIV: PRODUCT,
+	lexer.EQ:    EQUALS,
+	lexer.NE:    EQUALS,
+	lexer.LT:    COMPARE,
+	lexer.GT:    COMPARE,
+	lexer.LE:    COMPARE,
+	lexer.GE:    COMPARE,
+	lexer.ADD:   SUM,
+	lexer.SUB:   SUM,
+	lexer.MUL:   PRODUCT,
+	lexer.DIV:   PRODUCT,
+	lexer.BWAND: BITWISE,
+	lexer.BWOR:  BITWISE,
+	lexer.BWNOT: BITWISE,
+	lexer.BSR:   BITWISE,
+	lexer.BSL:   BITWISE,
 }
 
 func getPrecedence(tt string) int {
