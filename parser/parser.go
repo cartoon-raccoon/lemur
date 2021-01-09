@@ -15,6 +15,8 @@ type Parser struct {
 
 	prefixParseFns map[string]prefixParseFn
 	infixParseFns  map[string]infixParseFn
+
+	errors []error
 }
 
 type (
@@ -125,14 +127,14 @@ func New(l *lexer.Lexer) (*Parser, error) {
 }
 
 // Parse - parses a stream of tokens
-func (p *Parser) Parse() (*ast.Program, error) {
+func (p *Parser) Parse() *ast.Program {
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
 
 	for !p.curTokenIs(lexer.EOF) {
-		node, err := p.parseNode()
-		if err != nil {
-			return nil, err
+		node := p.parseNode()
+		if node == nil {
+			return nil
 		}
 		switch node.(type) {
 		case ast.Statement:
@@ -143,20 +145,22 @@ func (p *Parser) Parse() (*ast.Program, error) {
 				program.Functions = append(program.Functions, *node.(ast.Declaration).(*ast.FunctionDecl))
 			default:
 				//todo: return err
-				return nil, nil
+				//! this is a fatal error and should panic
+				return nil
 			}
 		default:
 			//todo: return err
-			return nil, nil
+			//! this is a fatal error and should panic
+			return nil
 		}
 
 		p.advance()
 	}
 
-	return program, nil
+	return program
 }
 
-func (p *Parser) parseNode() (ast.Node, error) {
+func (p *Parser) parseNode() ast.Node {
 	switch p.current.Type {
 	case lexer.LET:
 		return p.parseLetStatement()
@@ -170,7 +174,10 @@ func (p *Parser) parseNode() (ast.Node, error) {
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixParseFns[p.current.Type]
 	if prefix == nil {
-		//todo: return error
+		p.errors = append(p.errors, Err{
+			Msg: fmt.Sprintf("Unable to parse operator `%s`", p.current.Literal),
+			Con: p.current.Pos,
+		})
 		return nil
 	}
 	leftExp := prefix()
@@ -221,6 +228,15 @@ func (p *Parser) advance() error {
 	}
 	p.next = next
 	return nil
+}
+
+// CheckErrors returns all the errors found while parsing
+func (p *Parser) CheckErrors() []error {
+	return p.checkErrors()
+}
+
+func (p *Parser) checkErrors() []error {
+	return p.errors
 }
 
 //Err represents the error that can be thrown by the parser

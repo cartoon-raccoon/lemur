@@ -16,7 +16,10 @@ func (p *Parser) parseIntLiteral() ast.Expression {
 	lit := &ast.Int{Token: p.current}
 	value, err := strconv.ParseInt(p.current.Literal, 0, 64)
 	if err != nil {
-		//todo: return err
+		p.errors = append(p.errors, Err{
+			Msg: fmt.Sprintf("Unable to parse %s as integer", p.current.Literal),
+			Con: p.current.Pos,
+		})
 		return nil
 	}
 	lit.Inner = value
@@ -27,6 +30,10 @@ func (p *Parser) parseFltLiteral() ast.Expression {
 	lit := &ast.Flt{Token: p.current}
 	value, err := strconv.ParseFloat(p.current.Literal, 64)
 	if err != nil {
+		p.errors = append(p.errors, Err{
+			Msg: fmt.Sprintf("Unable to parse %s as float", p.current.Literal),
+			Con: p.current.Pos,
+		})
 		return nil
 	}
 	lit.Inner = value
@@ -43,6 +50,10 @@ func (p *Parser) parseBoolLiteral() ast.Expression {
 	lit := &ast.Bool{Token: p.current}
 	value, err := strconv.ParseBool(p.current.Literal)
 	if err != nil {
+		p.errors = append(p.errors, Err{
+			Msg: fmt.Sprintf("Unable to parse %s as bool", p.current.Literal),
+			Con: p.current.Pos,
+		})
 		return nil
 	}
 	lit.Inner = value
@@ -54,7 +65,15 @@ func (p *Parser) parseGroupedExpr() ast.Expression {
 
 	expr := p.parseExpression(LOWEST)
 
+	if expr == nil {
+		return nil
+	}
+
 	if !p.nextTokenIs(lexer.RPAREN) {
+		p.errors = append(p.errors, Err{
+			Msg: fmt.Sprintf("Expected `)`, got %s", p.next.Literal),
+			Con: p.next.Pos,
+		})
 		return nil
 	}
 
@@ -74,7 +93,6 @@ func (p *Parser) parsePrefixExpr() ast.Expression {
 	expression.Right = p.parseExpression(PREFIX)
 
 	if expression.Right == nil {
-		// todo: return error
 		return nil
 	}
 	return expression
@@ -91,7 +109,6 @@ func (p *Parser) parseInfixExpr(left ast.Expression) ast.Expression {
 	p.advance()
 	expr.Right = p.parseExpression(precedence)
 	if expr.Right == nil {
-		//todo: return error
 		return nil
 	}
 	return expr
@@ -101,7 +118,10 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	expr := &ast.IfExpression{Token: p.current}
 
 	if !p.nextTokenIs(lexer.LPAREN) {
-		// todo: return error
+		p.errors = append(p.errors, Err{
+			Msg: fmt.Sprintf("Expected `(` after 'if', got %s", p.next.Literal),
+			Con: p.next.Pos,
+		})
 		return nil
 	}
 	p.advance()
@@ -110,13 +130,16 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	expr.Condition = p.parseExpression(LOWEST)
 
 	if !p.nextTokenIs(lexer.LBRACE) {
+		p.errors = append(p.errors, Err{
+			Msg: fmt.Sprintf("Expected start of block, got %s", p.next.Literal),
+			Con: p.next.Pos,
+		})
 		return nil
 	}
 	p.advance()
 
-	res, err := p.parseBlockStatement()
-	if err != nil {
-		// todo: return error
+	res := p.parseBlockStatement()
+	if res == nil {
 		return nil
 	}
 	// p.current is now RBRACE
@@ -129,8 +152,8 @@ func (p *Parser) parseIfExpression() ast.Expression {
 		if p.nextTokenIs(lexer.LBRACE) {
 			p.advance()
 
-			alt, err := p.parseBlockStatement()
-			if err != nil {
+			alt := p.parseBlockStatement()
+			if alt == nil {
 				return nil
 			}
 			expr.Alternative = alt
@@ -138,7 +161,10 @@ func (p *Parser) parseIfExpression() ast.Expression {
 			p.advance()
 			expr.Alternative = p.parseIfExpression()
 		} else {
-			//todo: return err
+			p.errors = append(p.errors, Err{
+				Msg: fmt.Sprintf("Expected 'if' or `{`, got %s", p.next.Literal),
+				Con: p.next.Pos,
+			})
 			return nil
 		}
 
@@ -155,7 +181,10 @@ func (p *Parser) parseFnLiteral() ast.Expression {
 	}
 
 	if !p.nextTokenIs(lexer.LPAREN) {
-		//todo: return error
+		p.errors = append(p.errors, Err{
+			Msg: fmt.Sprintf("Expected `(`, got %s", p.next.Literal),
+			Con: p.next.Pos,
+		})
 		return nil
 	}
 
@@ -169,9 +198,8 @@ func (p *Parser) parseFnLiteral() ast.Expression {
 	// p.next should now be lbrace
 	if p.nextTokenIs(lexer.LBRACE) {
 		p.advance()
-		body, err := p.parseBlockStatement()
-		if err != nil {
-			//todo: return err
+		body := p.parseBlockStatement()
+		if body == nil {
 			return nil
 		}
 		lit.Body = body
@@ -203,7 +231,10 @@ func (p *Parser) parseFunctionParams() []*ast.Identifier {
 	}
 
 	if !p.nextTokenIs(lexer.RPAREN) {
-		//todo: return error
+		p.errors = append(p.errors, Err{
+			Msg: fmt.Sprintf("Expected `)`, got %s", p.next.Literal),
+			Con: p.next.Pos,
+		})
 		return nil
 	}
 
@@ -213,6 +244,10 @@ func (p *Parser) parseFunctionParams() []*ast.Identifier {
 func (p *Parser) parseFunctionCall(fn ast.Expression) ast.Expression {
 	exp := &ast.FunctionCall{Token: p.current, Ident: fn}
 	exp.Params = p.parseCallArguments()
+
+	if exp.Params == nil {
+		return nil
+	}
 
 	return exp
 }
@@ -235,7 +270,10 @@ func (p *Parser) parseCallArguments() []ast.Expression {
 	}
 
 	if !p.nextTokenIs(lexer.RPAREN) {
-		//todo: return err
+		p.errors = append(p.errors, Err{
+			Msg: fmt.Sprintf("ParseCallArgs: Expected `)`, got %s", p.next.Literal),
+			Con: p.next.Pos,
+		})
 		return nil
 	}
 

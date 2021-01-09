@@ -17,9 +17,15 @@ func TestLetStatements(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error instantiating parser: malformed input")
 	}
-	program, err := p.Parse()
-	if program == nil || err != nil {
-		t.Fatalf(err.Error())
+	program := p.Parse()
+	if program == nil {
+		t.Errorf("Error while parsing program")
+	}
+	if p.checkErrors() != nil {
+		for _, err := range p.checkErrors() {
+			t.Logf(err.Error())
+		}
+		t.Fatalf("Aborting test")
 	}
 
 	tests := []struct {
@@ -67,9 +73,15 @@ func TestReturnStatement(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error instantiating parser: malformed input")
 	}
-	program, err := p.Parse()
+	program := p.Parse()
 	if program == nil {
-		t.Fatalf(err.Error())
+		t.Errorf("Error while parsing program")
+	}
+	if p.checkErrors() != nil {
+		for _, err := range p.checkErrors() {
+			t.Logf(err.Error())
+		}
+		t.Fatalf("Aborting test")
 	}
 
 	if len := len(program.Statements); len != 3 {
@@ -99,9 +111,17 @@ func TestIdentExpr(t *testing.T) {
 		t.Fatalf("Error: lexer encountered an error - %s", err)
 	}
 
-	prog, err := p.Parse()
-	if err != nil {
-		t.Fatalf("Error: parser encountered an error - %s", err)
+	prog := p.Parse()
+	if prog == nil {
+		t.Errorf("Error while parsing program, checking for errors")
+	}
+	if p.checkErrors() != nil {
+		for _, err := range p.checkErrors() {
+			t.Logf(err.Error())
+		}
+		t.Fatalf("Aborting test")
+	} else {
+		t.Logf("No errors found")
 	}
 
 	if len := len(prog.Statements); len != 1 {
@@ -139,11 +159,17 @@ func TestLiteralExpr(t *testing.T) {
 			continue
 		}
 
-		prog, err := p.Parse()
-		if err != nil {
-			t.Errorf("Error on statement %d", i)
-			t.Errorf("Error: parser encountered an error - %s", err)
-			continue
+		prog := p.Parse()
+		if prog == nil {
+			t.Errorf("Error while parsing program %d, checking for errors", i)
+		}
+		if p.checkErrors() != nil {
+			for _, err := range p.checkErrors() {
+				t.Logf(err.Error())
+			}
+			t.Fatalf("Aborting test")
+		} else {
+			t.Logf("No errors found")
 		}
 
 		if len := len(prog.Statements); len != 1 {
@@ -208,7 +234,18 @@ func TestPrefixExpr(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not generate AST; %s", err)
 	}
-	prog, err := p.Parse()
+	prog := p.Parse()
+	if prog == nil {
+		t.Errorf("Error while parsing program, checking for errors")
+	}
+	if p.checkErrors() != nil {
+		for _, err := range p.checkErrors() {
+			t.Logf(err.Error())
+		}
+		t.Fatalf("Aborting test")
+	} else {
+		t.Logf("No errors found")
+	}
 
 	expected := []struct {
 		Token    string
@@ -219,10 +256,6 @@ func TestPrefixExpr(t *testing.T) {
 		{lexer.SUB, "-", &ast.Int{Inner: 5}, "(-5)"},
 		{lexer.BANG, "!", &ast.Identifier{Value: "hello"}, "(!hello)"},
 		{lexer.SUB, "-", &ast.Flt{Inner: 420.69}, "(-420.69)"},
-	}
-
-	if prog == nil {
-		t.Fatalf("Invalid program")
 	}
 
 	for i, stmt := range prog.Statements {
@@ -272,13 +305,19 @@ func TestInfixExpr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Error parsing input")
 		}
-		prog, err := p.Parse()
-		if err != nil {
-			t.Fatalf("Error parsing program: %s", err)
-		}
+		prog := p.Parse()
 		if prog == nil {
-			t.Fatalf("AST could not be generated")
+			t.Errorf("Error while parsing program, checking for errors")
 		}
+		if p.checkErrors() != nil {
+			for _, err := range p.checkErrors() {
+				t.Logf(err.Error())
+			}
+			t.Fatalf("Aborting test")
+		} else {
+			t.Logf("No errors found")
+		}
+
 		if len := len(prog.Statements); len != 1 {
 			t.Errorf("wrong statement count for program %d: expected 1, got %d", i, len)
 			continue
@@ -320,6 +359,10 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		input    string
 		expected string
 	}{
+		{
+			"1 + 1",
+			"(1 + 1)",
+		},
 		{
 			"-a * b",
 			"((-a) * b)",
@@ -399,10 +442,19 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Test %d: Could not build parser", i)
 		}
-		prog, err := p.Parse()
-		if err != nil {
-			t.Fatalf("Test %d: Could not parse AST", i)
+		prog := p.Parse()
+		if prog == nil {
+			t.Errorf("Error while parsing program, checking for errors")
 		}
+		if p.checkErrors() != nil {
+			for _, err := range p.checkErrors() {
+				t.Logf(err.Error())
+			}
+			t.Fatalf("Aborting test")
+		} else {
+			t.Logf("No errors found")
+		}
+
 		expr, ok := prog.Statements[0].(*ast.ExprStatement)
 		if !ok {
 			t.Errorf("Expected exprstatement, got %T", expr)
@@ -438,13 +490,17 @@ func TestIfExpression(t *testing.T) {
 	}
 
 	// parsing
-	prog, err := p.Parse()
-
-	if err != nil {
-		t.Fatalf("Error while parsing: %s", err)
-	}
+	prog := p.Parse()
 	if prog == nil {
-		t.Fatalf("Could not parse AST")
+		t.Errorf("Error while parsing program, checking for errors")
+	}
+	if p.checkErrors() != nil {
+		for _, err := range p.checkErrors() {
+			t.Logf(err.Error())
+		}
+		t.Fatalf("Aborting test")
+	} else {
+		t.Logf("No errors found")
 	}
 
 	// testing top level statements
@@ -523,7 +579,18 @@ func TestFnLiteralParsing(t *testing.T) {
 	if p.next.Type != lexer.LPAREN {
 		t.Fatalf("Next token is not lparen, got %s", p.next.Type)
 	}
-	prog, err := p.Parse()
+	prog := p.Parse()
+	if prog == nil {
+		t.Errorf("Error while parsing program, checking for errors")
+	}
+	if p.checkErrors() != nil {
+		for _, err := range p.checkErrors() {
+			t.Logf(err.Error())
+		}
+		t.Fatalf("Aborting test")
+	} else {
+		t.Logf("No errors found")
+	}
 
 	if len := len(prog.Statements); len != 1 {
 		t.Errorf("Expected 1 statement, got %d", len)
@@ -586,10 +653,19 @@ func TestCallExpression(t *testing.T) {
 		t.Fatalf("Incorrect next token: got %s", p.next.Type)
 	}
 
-	prog, err := p.Parse()
-	if err != nil {
-		t.Fatalf(err.Error())
+	prog := p.Parse()
+	if prog == nil {
+		t.Errorf("Error while parsing program, checking for errors")
 	}
+	if p.checkErrors() != nil {
+		for _, err := range p.checkErrors() {
+			t.Logf(err.Error())
+		}
+		t.Fatalf("Aborting test")
+	} else {
+		t.Logf("No errors found")
+	}
+
 	if len := len(prog.Statements); len != 1 {
 		t.Errorf("Expected 1 statement, got %d", len)
 		for _, stmt := range prog.Statements {

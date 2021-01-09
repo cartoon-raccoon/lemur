@@ -7,14 +7,15 @@ import (
 	"github.com/cartoon-raccoon/monkey-jit/lexer"
 )
 
-func (p *Parser) parseLetStatement() (*ast.LetStatement, error) {
+func (p *Parser) parseLetStatement() *ast.LetStatement {
 	stmt := &ast.LetStatement{Token: p.current}
 
 	if !p.nextTokenIs(lexer.IDENT) {
-		return stmt, Err{
+		p.errors = append(p.errors, Err{
 			Msg: fmt.Sprintf("Expected identifier, got `%s`", p.next.Type),
 			Con: p.next.Pos,
-		}
+		})
+		return nil
 	}
 
 	p.advance()
@@ -22,10 +23,11 @@ func (p *Parser) parseLetStatement() (*ast.LetStatement, error) {
 	stmt.Name = &ast.Identifier{Token: p.current, Value: p.current.Literal}
 
 	if !p.nextTokenIs(lexer.ASSIGN) {
-		return stmt, Err{
+		p.errors = append(p.errors, Err{
 			Msg: fmt.Sprintf("Expected assignment operator, got `%s`", p.next.Type),
 			Con: p.next.Pos,
-		}
+		})
+		return nil
 	}
 
 	// fixme: a bit hacky
@@ -34,10 +36,7 @@ func (p *Parser) parseLetStatement() (*ast.LetStatement, error) {
 
 	val := p.parseExpression(LOWEST)
 	if val == nil {
-		return stmt, Err{
-			Msg: fmt.Sprintf("Could not parse expression"),
-			Con: p.current.Pos,
-		}
+		return nil
 	}
 	stmt.Value = val
 
@@ -46,59 +45,62 @@ func (p *Parser) parseLetStatement() (*ast.LetStatement, error) {
 	// whenever that may be
 	p.advance() //puts the next token in p.current
 
-	return stmt, nil
+	return stmt
 }
 
-func (p *Parser) parseReturnStatement() (*ast.ReturnStatement, error) {
+func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	stmt := &ast.ReturnStatement{Token: p.current}
 
 	p.advance() // p.current is now expr start
 
 	stmt.Value = p.parseExpression(LOWEST)
 
-	// if !p.nextTokenIs(lexer.SEMICOL) {
-	// 	return nil, Err{
-	// 		Msg: fmt.Sprintf("Expected semicolon, got %s", p.next.Type),
-	// 		Con: p.next.Pos,
-	// 	}
-	// }
-
+	if stmt.Value == nil {
+		return nil
+	}
 	p.advance()
 
-	return stmt, nil
+	return stmt
 }
 
-func (p *Parser) parseExprStatement() (*ast.ExprStatement, error) {
+func (p *Parser) parseExprStatement() *ast.ExprStatement {
 	stmt := &ast.ExprStatement{Token: p.current}
 
 	stmt.Expression = p.parseExpression(LOWEST)
+
+	if stmt.Expression == nil {
+		return nil
+	}
 
 	if p.nextTokenIs(lexer.SEMICOL) {
 		p.advance()
 	}
 
-	return stmt, nil
+	return stmt
 }
 
-func (p *Parser) parseBlockStatement() (*ast.BlockStatement, error) {
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	block := &ast.BlockStatement{Token: p.current}
 	block.Statements = []ast.Statement{}
 
 	p.advance()
 
 	for !p.curTokenIs(lexer.RBRACE) && !p.curTokenIs(lexer.EOF) {
-		node, err := p.parseNode()
-		if err != nil {
-			return block, err
+		node := p.parseNode()
+		if node == nil {
+			return nil
 		}
 		stmt, ok := node.(ast.Statement)
 		if stmt != nil && ok {
 			block.Statements = append(block.Statements, stmt)
 		} else {
-			//todo: return err
+			p.errors = append(p.errors, Err{
+				Msg: "Only statements can be declared in blocks",
+				Con: p.current.Pos,
+			})
 		}
 		p.advance()
 	}
 
-	return block, nil
+	return block
 }
