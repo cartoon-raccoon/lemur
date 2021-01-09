@@ -20,7 +20,7 @@ type Lexer struct {
 
 // New returns a new uninitialized lexer
 func New(input string) *Lexer {
-	l := &Lexer{input: input}
+	l := &Lexer{input: input, line: 1, col: 1}
 	l.nextChar()
 	return l
 }
