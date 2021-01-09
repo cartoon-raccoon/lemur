@@ -31,7 +31,7 @@ func New() *Evaluator {
 func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 	switch node.(type) {
 	case *ast.Program:
-		ret := &object.ProgramResult{}
+		ret := &object.StmtResults{}
 		ret.Results = []object.Object{}
 		for _, stmt := range node.(*ast.Program).Statements {
 			ret.Results = append(ret.Results, e.Evaluate(stmt))
@@ -49,10 +49,13 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 		case *ast.ReturnStatement:
 
 		case *ast.BlockStatement:
+			ret := &object.StmtResults{}
+			ret.Results = []object.Object{}
 			blkstmt := node.(ast.Statement).(*ast.BlockStatement)
 			for _, stmt := range blkstmt.Statements {
-				e.Evaluate(stmt)
+				ret.Results = append(ret.Results, e.Evaluate(stmt))
 			}
+			return ret
 		default:
 			return nil
 		}
@@ -74,17 +77,22 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 		case *ast.IfExpression:
 			ifexpr := node.(ast.Expression).(*ast.IfExpression)
 			condition := e.Evaluate(ifexpr.Condition)
+			if condition == nil {
+				//todo: return error
+			}
 			if evaluateTruthiness(condition) {
 				return e.Evaluate(ifexpr.Result)
 			}
-			switch ifexpr.Alternative.(type) {
-			case *ast.BlockStatement:
-				return e.Evaluate(ifexpr.Alternative.(*ast.BlockStatement))
-			case *ast.IfExpression:
-				return e.Evaluate(ifexpr.Alternative.(*ast.IfExpression))
-			default:
-				//todo: throw error
-				return nil
+			if ifexpr.Alternative != nil {
+				switch ifexpr.Alternative.(type) {
+				case *ast.BlockStatement:
+					return e.Evaluate(ifexpr.Alternative.(*ast.BlockStatement))
+				case *ast.IfExpression:
+					return e.Evaluate(ifexpr.Alternative.(*ast.IfExpression))
+				default:
+					//todo: throw error
+					return nil
+				}
 			}
 		case *ast.FnLiteral:
 		case *ast.FunctionCall:
