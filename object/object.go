@@ -111,7 +111,7 @@ func (n *Null) Type() string { return NULL }
 
 // Inspect implements Object for Identifier
 func (n *Null) Inspect() string {
-	return "NULL"
+	return "Null"
 }
 
 // Display implements Object for Null
@@ -129,12 +129,26 @@ func (pr *ProgramResult) Type() string { return PRES }
 func (pr *ProgramResult) Inspect() string {
 	pres := []string{}
 	for _, res := range pr.Results {
-		pres = append(pres, res.Inspect())
+		if !isNull(res) {
+			pres = append(pres, res.Inspect())
+		}
 	}
 	return strings.Join(pres, "\n")
 }
 
 // Display implements Object for ProgramResult
 func (pr *ProgramResult) Display() {
-	fmt.Printf("%s\n", pr.Inspect())
+	inspect := pr.Inspect()
+	if len(strings.TrimSpace(inspect)) != 0 {
+		fmt.Printf("%s\n", inspect)
+	}
+}
+
+func isNull(o Object) bool {
+	switch o.(type) {
+	case *Null:
+		return true
+	default:
+		return false
+	}
 }
