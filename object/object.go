@@ -117,16 +117,16 @@ func (n *Null) Inspect() string {
 // Display implements Object for Null
 func (n *Null) Display() {}
 
-// ProgramResult is the results returned by a program
-type ProgramResult struct {
+// StmtResults is the results returned by a program
+type StmtResults struct {
 	Results []Object
 }
 
-// Type implements Object for ProgramResult
-func (pr *ProgramResult) Type() string { return PRES }
+// Type implements Object for StmtResults
+func (pr *StmtResults) Type() string { return PRES }
 
-// Inspect implements Object for ProgramResult
-func (pr *ProgramResult) Inspect() string {
+// Inspect implements Object for StmtResults
+func (pr *StmtResults) Inspect() string {
 	pres := []string{}
 	for _, res := range pr.Results {
 		if !isNull(res) {
@@ -136,8 +136,8 @@ func (pr *ProgramResult) Inspect() string {
 	return strings.Join(pres, "\n")
 }
 
-// Display implements Object for ProgramResult
-func (pr *ProgramResult) Display() {
+// Display implements Object for StmtResults
+func (pr *StmtResults) Display() {
 	inspect := pr.Inspect()
 	if len(strings.TrimSpace(inspect)) != 0 {
 		fmt.Printf("%s\n", inspect)
