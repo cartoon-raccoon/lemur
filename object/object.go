@@ -1,6 +1,9 @@
 package object
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 const (
 	//INTEGER - Integer
@@ -16,6 +19,9 @@ const (
 
 	//IDENT - Identifier
 	IDENT = "IDENT_OBJ"
+
+	//PRES - Program result
+	PRES = "PROG_RES"
 )
 
 // Object represents any object returnable from an expression
@@ -110,3 +116,25 @@ func (n *Null) Inspect() string {
 
 // Display implements Object for Null
 func (n *Null) Display() {}
+
+// ProgramResult is the results returned by a program
+type ProgramResult struct {
+	Results []Object
+}
+
+// Type implements Object for ProgramResult
+func (pr *ProgramResult) Type() string { return PRES }
+
+// Inspect implements Object for ProgramResult
+func (pr *ProgramResult) Inspect() string {
+	pres := []string{}
+	for _, res := range pr.Results {
+		pres = append(pres, res.Inspect())
+	}
+	return strings.Join(pres, "\n")
+}
+
+// Display implements Object for ProgramResult
+func (pr *ProgramResult) Display() {
+	fmt.Printf("%s\n", pr.Inspect())
+}
