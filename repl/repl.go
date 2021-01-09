@@ -35,6 +35,8 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 	fmt.Printf("running on (%s %s)\n", runtime.GOOS, runtime.GOARCH)
 	fmt.Printf("Welcome, %s\n", username)
 
+	evaluator := eval.New()
+
 	for {
 		fmt.Printf(PROMPT)
 		scanned := scanner.Scan()
@@ -61,20 +63,16 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 		// }
 		p, err := parser.New(l)
 		if err != nil {
-			fmt.Println("Errors encountered 1")
 			fmt.Fprintf(os.Stdout, "%s\n", err.Error())
 			continue
 		}
 		prog := p.Parse()
 		if p.CheckErrors() != nil {
-			fmt.Println("Errors encountered 2")
 			for _, err := range p.CheckErrors() {
 				fmt.Fprintf(os.Stdout, "%s\n", err.Error())
 			}
 			continue
 		}
-
-		evaluator := eval.Evaluator{}
 
 		obj := evaluator.Evaluate(prog)
 
