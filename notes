@@ -3,7 +3,8 @@ Add method to parse string literals and handle escaped characters
 Implement stripping comments
 Add support for hex and binary numlits
 Add infix parsing for op-assign operators
-Add shell commands
+Add more shell commands
+Add error handling for Eval
 
 //*--------------| GRAMMAR |--------------*/
 
