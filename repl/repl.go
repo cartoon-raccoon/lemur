@@ -70,7 +70,6 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 		obj := evaluator.Evaluate(prog)
 
 		if obj == nil {
-			fmt.Println("<nil>")
 			continue
 		}
 		obj.Display()
