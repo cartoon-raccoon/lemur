@@ -20,6 +20,14 @@ type Evaluator struct {
 	Data map[string]object.Object
 }
 
+// New - returns a new evaluator
+func New() *Evaluator {
+	eval := &Evaluator{
+		Data: map[string]object.Object{},
+	}
+	return eval
+}
+
 // Evaluate runs the evaluator, walking the tree and executing code
 func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 	switch node.(type) {
@@ -35,6 +43,7 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 		case *ast.LetStatement:
 			letstmt := node.(ast.Statement).(*ast.LetStatement)
 			e.Data[letstmt.Name.String()] = e.Evaluate(letstmt.Value)
+			return NULL
 		case *ast.ExprStatement:
 			expr := node.(ast.Statement).(*ast.ExprStatement)
 			return e.Evaluate(expr.Expression)
