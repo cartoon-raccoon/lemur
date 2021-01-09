@@ -58,8 +58,8 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 			}
 			return data
 		case *ast.PrefixExpr:
-			// pexpr := node.(ast.Expression).(*ast.PrefixExpr)
-
+			pexpr := node.(ast.Expression).(*ast.PrefixExpr)
+			return e.evalPrefixExpr(pexpr)
 		case *ast.InfixExpr:
 			iexpr := node.(ast.Expression).(*ast.InfixExpr)
 			return e.evalInfixExpr(iexpr)
@@ -99,6 +99,39 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 		return nil
 	}
 	return nil
+}
+
+func (e *Evaluator) evalPrefixExpr(expr *ast.PrefixExpr) object.Object {
+	switch expr.Operator {
+	case "!":
+		return e.evalBangPExpr(expr.Right)
+	case "-":
+		return e.evalMinusPExpr(expr.Right)
+	default:
+		return NULL
+	}
+}
+
+func (e *Evaluator) evalBangPExpr(expr ast.Expression) object.Object {
+	pexpr := e.Evaluate(expr)
+	truth := evaluateTruthiness(pexpr)
+	return nativeBooltoObj(!truth)
+}
+
+func (e *Evaluator) evalMinusPExpr(expr ast.Expression) object.Object {
+	pexpr := e.Evaluate(expr)
+	switch pexpr.(type) {
+	case *object.Integer:
+		num := pexpr.(*object.Integer).Value
+		return &object.Integer{Value: -num}
+	case *object.Float:
+		num := pexpr.(*object.Float).Value
+		return &object.Float{Value: -num}
+	default:
+		// todo: add error handling
+		//! boolean and strings cannot be operated on with a -
+		return NULL
+	}
 }
 
 func (e *Evaluator) evalInfixExpr(expr *ast.InfixExpr) object.Object {
@@ -209,5 +242,28 @@ func isValidFltOp(input string) bool {
 }
 
 func evaluateTruthiness(in object.Object) bool {
-	panic("eval.evaluateTruthiness: unimplemented")
+	switch in.(type) {
+	case *object.Integer:
+		if in.(*object.Integer).Value == 0 {
+			return false
+		}
+		return true
+	case *object.Float:
+		if in.(*object.Float).Value == 0 {
+			return false
+		}
+		return true
+	case *object.String:
+		if len(in.(*object.String).Value) == 0 {
+			return false
+		}
+		return true
+	case *object.Boolean:
+		if in.(*object.Boolean).Value {
+			return true
+		}
+		return false
+	default:
+		return false
+	}
 }
