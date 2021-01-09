@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/cartoon-raccoon/monkey-jit/eval"
 	"github.com/cartoon-raccoon/monkey-jit/lexer"
@@ -42,6 +43,14 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 		}
 
 		line := scanner.Text()
+		if strings.HasPrefix(line, ":") {
+			if fn, ok := Commands[line[1:]]; ok {
+				fn()
+			} else {
+				fmt.Printf("No command `%s` found\n", line[1:])
+			}
+			continue
+		}
 		l := lexer.New(line)
 		// for tok, err := l.NextToken(); tok.Type != lexer.EOF; tok, err = l.NextToken() {
 		// 	if err != nil {
@@ -53,14 +62,14 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 		p, err := parser.New(l)
 		if err != nil {
 			fmt.Println("Errors encountered 1")
-			fmt.Fprintf(os.Stdout, err.Error())
+			fmt.Fprintf(os.Stdout, "%s\n", err.Error())
 			continue
 		}
 		prog := p.Parse()
 		if p.CheckErrors() != nil {
 			fmt.Println("Errors encountered 2")
 			for _, err := range p.CheckErrors() {
-				fmt.Fprintf(os.Stdout, err.Error())
+				fmt.Fprintf(os.Stdout, "%s\n", err.Error())
 			}
 			continue
 		}
