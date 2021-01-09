@@ -43,11 +43,54 @@ func (e *Evaluator) evalInfixExpr(expr *ast.InfixExpr) object.Object {
 	left := e.Evaluate(expr.Left)
 	right := e.Evaluate(expr.Right)
 
+	if isComparisonOp(expr.Operator) {
+		return e.evaluateComp(left, right, expr.Operator)
+	}
+
 	if ok, res := e.evaluateSides(left, right, expr.Operator); ok {
 		return res
 	}
 
 	return nil
+}
+
+func (e *Evaluator) evaluateComp(left, right object.Object, op string) object.Object {
+	switch left.(type) {
+	case *object.Integer:
+		if right, ok := right.(*object.Integer); ok {
+			left := left.(*object.Integer)
+			return nativeBooltoObj(executeCompInt(left.Value, right.Value, op))
+		}
+		//todo: error
+		return nil
+	case *object.Float:
+		if right, ok := right.(*object.Float); ok {
+			left := left.(*object.Float)
+			return nativeBooltoObj(executeCompFlt(left.Value, right.Value, op))
+		}
+		return nil
+	case *object.String:
+		if right, ok := right.(*object.String); ok {
+			left := left.(*object.String)
+			return nativeBooltoObj(executeCompStr(left.Value, right.Value, op))
+		}
+		return nil
+	case *object.Boolean:
+		if !isValidBoolOp(op) {
+			//todo: throw error
+			return nil
+		}
+		if right, ok := right.(*object.Boolean); ok {
+			left := left.(*object.Boolean)
+			return nativeBooltoObj(executeCompBool(left.Value, right.Value, op))
+		}
+		//todo: error
+		return nil
+	case *object.Null:
+		panic("eval.evaluateSides (case Null): unimplemented")
+	default:
+		return nil
+	}
 }
 
 func (e *Evaluator) evaluateSides(left, right object.Object, op string) (bool, object.Object) {
@@ -75,6 +118,85 @@ func (e *Evaluator) evaluateSides(left, right object.Object, op string) (bool, o
 		panic("eval.evaluateSides (case Null): unimplemented")
 	default:
 		return false, nil
+	}
+}
+
+func executeCompInt(left, right int64, op string) bool {
+	switch op {
+	case lexer.EQ:
+		return left == right
+	case lexer.NE:
+		return left != right
+	case lexer.GT:
+		return left > right
+	case lexer.LT:
+		return left < right
+	case lexer.GE:
+		return left >= right
+	case lexer.LE:
+		return left <= right
+	default:
+		panic("eval.executeCompInt: reached unreachable code")
+	}
+}
+
+func executeCompFlt(left, right float64, op string) bool {
+	switch op {
+	case lexer.EQ:
+		return left == right
+	case lexer.NE:
+		return left != right
+	case lexer.GT:
+		return left > right
+	case lexer.LT:
+		return left < right
+	case lexer.GE:
+		return left >= right
+	case lexer.LE:
+		return left <= right
+	default:
+		panic("eval.executeCompFlt: reached unreachable code")
+	}
+}
+
+func executeCompStr(left, right string, op string) bool {
+	switch op {
+	case lexer.EQ:
+		return left == right
+	case lexer.NE:
+		return left != right
+	case lexer.GT:
+		return left > right
+	case lexer.LT:
+		return left < right
+	case lexer.GE:
+		return left >= right
+	case lexer.LE:
+		return left <= right
+	default:
+		panic("eval.executeCompStr: reached unreachable code")
+	}
+}
+
+func executeCompBool(left, right bool, op string) bool {
+	switch op {
+	case lexer.EQ:
+		return left == right
+	case lexer.NE:
+		return left != right
+	default:
+		panic("eval.executeCompStr: reached unreachable code")
+	}
+}
+
+func isValidBoolOp(op string) bool {
+	switch op {
+	case lexer.EQ:
+		return true
+	case lexer.NE:
+		return true
+	default:
+		return false
 	}
 }
 
@@ -116,13 +238,6 @@ func executeOpFlt(left, right float64, op string) float64 {
 	}
 }
 
-func nativeBooltoObj(input bool) object.Object {
-	if input {
-		return TRUE
-	}
-	return FALSE
-}
-
 func isValidFltOp(input string) bool {
 	switch input {
 	case lexer.ADD:
@@ -141,6 +256,25 @@ func isValidFltOp(input string) bool {
 		return false
 	case lexer.BSR:
 		return false
+	default:
+		return false
+	}
+}
+
+func isComparisonOp(input string) bool {
+	switch input {
+	case lexer.EQ:
+		return true
+	case lexer.NE:
+		return true
+	case lexer.LT:
+		return true
+	case lexer.GT:
+		return true
+	case lexer.LE:
+		return true
+	case lexer.GE:
+		return true
 	default:
 		return false
 	}
@@ -171,4 +305,11 @@ func evaluateTruthiness(in object.Object) bool {
 	default:
 		return false
 	}
+}
+
+func nativeBooltoObj(input bool) object.Object {
+	if input {
+		return TRUE
+	}
+	return FALSE
 }
