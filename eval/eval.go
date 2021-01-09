@@ -24,16 +24,27 @@ type Evaluator struct {
 func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 	switch node.(type) {
 	case *ast.Program:
+		ret := &object.ProgramResult{}
+		ret.Results = []object.Object{}
 		for _, stmt := range node.(*ast.Program).Statements {
-			return e.Evaluate(stmt)
+			ret.Results = append(ret.Results, e.Evaluate(stmt))
 		}
+		return ret
 	case ast.Statement:
 		switch node.(ast.Statement).(type) {
 		case *ast.LetStatement:
-			// evaluate let statement
+			letstmt := node.(ast.Statement).(*ast.LetStatement)
+			e.Data[letstmt.Name.String()] = e.Evaluate(letstmt.Value)
 		case *ast.ExprStatement:
 			expr := node.(ast.Statement).(*ast.ExprStatement)
 			return e.Evaluate(expr.Expression)
+		case *ast.ReturnStatement:
+
+		case *ast.BlockStatement:
+			blkstmt := node.(ast.Statement).(*ast.BlockStatement)
+			for _, stmt := range blkstmt.Statements {
+				e.Evaluate(stmt)
+			}
 		default:
 			return nil
 		}
@@ -52,6 +63,23 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 		case *ast.InfixExpr:
 			iexpr := node.(ast.Expression).(*ast.InfixExpr)
 			return e.evalInfixExpr(iexpr)
+		case *ast.IfExpression:
+			ifexpr := node.(ast.Expression).(*ast.IfExpression)
+			condition := e.Evaluate(ifexpr.Condition)
+			if evaluateTruthiness(condition) {
+				return e.Evaluate(ifexpr.Result)
+			}
+			switch ifexpr.Alternative.(type) {
+			case *ast.BlockStatement:
+				return e.Evaluate(ifexpr.Alternative.(*ast.BlockStatement))
+			case *ast.IfExpression:
+				return e.Evaluate(ifexpr.Alternative.(*ast.IfExpression))
+			default:
+				//todo: throw error
+				return nil
+			}
+		case *ast.FnLiteral:
+		case *ast.FunctionCall:
 		case *ast.Int:
 			intexpr := node.(ast.Expression).(*ast.Int)
 			return &object.Integer{Value: intexpr.Inner}
@@ -178,4 +206,8 @@ func isValidFltOp(input string) bool {
 	default:
 		return false
 	}
+}
+
+func evaluateTruthiness(in object.Object) bool {
+	panic("eval.evaluateTruthiness: unimplemented")
 }
