@@ -58,7 +58,11 @@ func (e *Evaluator) evalInfixExpr(expr *ast.InfixExpr, env *object.Environment) 
 	return e.evaluateSides(left, right, expr.Operator, expr.Context())
 }
 
-func (e *Evaluator) evaluateComp(left, right object.Object, op string, con lexer.Context) object.Object {
+func (e *Evaluator) evaluateComp(
+	left, right object.Object,
+	op string,
+	con lexer.Context,
+) object.Object {
 	switch left.(type) {
 	case *object.Integer:
 		if right, ok := right.(*object.Integer); ok {

@@ -19,19 +19,20 @@ var (
 
 // Evaluator epresents the program that walks the tree
 type Evaluator struct {
-	Data map[string]object.Object
+	Ctxt lexer.Context
 }
 
 // New - returns a new evaluator
 func New() *Evaluator {
 	eval := &Evaluator{
-		Data: map[string]object.Object{},
+		Ctxt: lexer.Context{Line: 1, Col: 1, Ctxt: ""},
 	}
 	return eval
 }
 
 // Evaluate runs the evaluator, walking the tree and executing code
 func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Object {
+	e.Ctxt = node.Context()
 	switch node.(type) {
 	case *ast.Program:
 		res := &object.StmtResults{}
@@ -66,9 +67,10 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 			return NULL
 		}
 	case ast.Expression:
+		expr := node.(ast.Expression)
 		switch node.(ast.Expression).(type) {
 		case *ast.Identifier:
-			ident := node.(ast.Expression).(*ast.Identifier)
+			ident := expr.(*ast.Identifier)
 			data, ok := env.Data[ident.Value]
 			if !ok {
 				return &object.Exception{
@@ -78,13 +80,13 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 			}
 			return data
 		case *ast.PrefixExpr:
-			pexpr := node.(ast.Expression).(*ast.PrefixExpr)
+			pexpr := expr.(*ast.PrefixExpr)
 			return e.evalPrefixExpr(pexpr, env)
 		case *ast.InfixExpr:
-			iexpr := node.(ast.Expression).(*ast.InfixExpr)
+			iexpr := expr.(*ast.InfixExpr)
 			return e.evalInfixExpr(iexpr, env)
 		case *ast.IfExpression:
-			ifexpr := node.(ast.Expression).(*ast.IfExpression)
+			ifexpr := expr.(*ast.IfExpression)
 			condition := e.Evaluate(ifexpr.Condition, env)
 			if condition == nil {
 				return &object.Exception{
@@ -109,17 +111,27 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 				}
 			}
 		case *ast.FnLiteral:
-			//todo
-			return &object.Exception{
-				Msg: "FnLiteral: unimplemented",
-				Con: node.Context(),
-			}
+			fnlit := expr.(*ast.FnLiteral)
+			params := fnlit.Params
+			body := fnlit.Body
+			return &object.Function{Params: params, Env: env, Body: body}
+
 		case *ast.FunctionCall:
-			//todo
-			return &object.Exception{
-				Msg: "FuncCall: unimplemented",
-				Con: node.Context(),
+			// asserting type
+			fncall := expr.(*ast.FunctionCall)
+
+			// resolving to object
+			function := e.Evaluate(fncall.Ident, env)
+			if object.IsErr(function) {
+				return function
 			}
+
+			args := e.evalExpressions(fncall.Params, env)
+			if len(args) == 1 && object.IsErr(args[0]) {
+				return args[0]
+			}
+
+			return e.applyFunction(function, args)
 		case *ast.DotExpression:
 			//todo
 			return &object.Exception{
@@ -179,12 +191,69 @@ func (e *Evaluator) evalBlockStmt(stmt *ast.BlockStatement, env *object.Environm
 	return result
 }
 
-// Err - Error returned by the evaluator
-type Err struct {
-	Msg string
-	Con lexer.Context
+func (e *Evaluator) evalExpressions(
+	exprs []ast.Expression,
+	env *object.Environment,
+) []object.Object {
+	objects := []object.Object{}
+
+	for _, expr := range exprs {
+		res := e.Evaluate(expr, env)
+		if object.IsErr(res) {
+			return []object.Object{res}
+		}
+		objects = append(objects, res)
+	}
+
+	return objects
 }
 
-func (e Err) Error() string {
-	return fmt.Sprintf("%s - Line %d, Col %d", e.Msg, e.Con.Line, e.Con.Col)
+func (e *Evaluator) applyFunction(
+	fn object.Object,
+	args []object.Object,
+) object.Object {
+	function, ok := fn.(*object.Function)
+	if !ok {
+		return &object.Exception{
+			Msg: "Not a function",
+			Con: e.Ctxt,
+		}
+	}
+
+	len1 := len(args)
+	len2 := len(function.Params)
+	if len1 != len2 {
+		return &object.Exception{
+			Msg: fmt.Sprintf(
+				"Param mismatch: expected %d, got %d", len2, len1,
+			),
+			Con: e.Ctxt,
+		}
+	}
+
+	extendedEnv := extendFunctionEnv(function, args)
+	evaluated := e.Evaluate(function.Body, extendedEnv)
+
+	return unwrapReturnValue(evaluated)
+}
+
+func extendFunctionEnv(
+	fn *object.Function,
+	args []object.Object,
+) *object.Environment {
+	env := object.NewEnclosedEnv(fn.Env)
+
+	for i, param := range fn.Params {
+		env.Set(param.Value, args[i])
+	}
+
+	return env
+}
+
+func unwrapReturnValue(obj object.Object) object.Object {
+	if ret, ok := obj.(*object.Return); ok {
+		return ret.Inner
+	}
+
+	return obj
 }

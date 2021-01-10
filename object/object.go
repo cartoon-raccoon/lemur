@@ -1,9 +1,11 @@
 package object
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
+	"github.com/cartoon-raccoon/monkey-jit/ast"
 	"github.com/cartoon-raccoon/monkey-jit/lexer"
 )
 
@@ -20,6 +22,8 @@ const (
 	NULL = "NULL_OBJ"
 	//RETURN - Return value of a block
 	RETURN = "RETURN_OBJ"
+	//FUNCTION - Function object
+	FUNCTION = "FUNC_OBJ"
 
 	//ERROR - Error object
 	ERROR = "ERROR_OBJ"
@@ -43,7 +47,8 @@ type Object interface {
 
 // Environment represents the execution environment
 type Environment struct {
-	Data map[string]Object
+	Data  map[string]Object
+	Outer *Environment
 }
 
 // NewEnv - Returns a new fresh environment
@@ -52,6 +57,30 @@ func NewEnv() *Environment {
 	env.Data = make(map[string]Object)
 
 	return env
+}
+
+// NewEnclosedEnv nests the provided environment inside a new one
+// It mimics a new stack frame
+func NewEnclosedEnv(outer *Environment) *Environment {
+	env := NewEnv()
+	env.Outer = outer
+
+	return env
+}
+
+// Get recursively gets a variable from the environment and all its outer envs
+func (env *Environment) Get(ident string) (Object, bool) {
+	obj, ok := env.Data[ident]
+	if !ok && env.Outer != nil {
+		obj, ok = env.Outer.Get(ident)
+	}
+	return obj, ok
+}
+
+// Set adds a variable to the environment
+func (env *Environment) Set(ident string, val Object) Object {
+	env.Data[ident] = val
+	return val
 }
 
 // Type implements Object for Environment
@@ -170,6 +199,40 @@ func (r *Return) Display() {
 	r.Inner.Display()
 }
 
+// Function represents a function in the environment
+type Function struct {
+	Params []*ast.Identifier
+	Body   *ast.BlockStatement
+	Env    *Environment
+}
+
+// Type implements Object for Function
+func (f *Function) Type() string { return FUNCTION }
+
+// Inspect implements Object for Function
+func (f *Function) Inspect() string {
+	var out bytes.Buffer
+
+	params := []string{}
+
+	for _, param := range f.Params {
+		params = append(params, param.String())
+	}
+
+	out.WriteString("fn(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") ")
+	out.WriteString(f.Body.String())
+
+	return out.String()
+
+}
+
+// Display implements Object for Function
+func (f *Function) Display() {
+	fmt.Printf("%s\n", f.Inspect())
+}
+
 // StmtResults is the results returned by a program
 type StmtResults struct {
 	Results []Object
@@ -220,6 +283,16 @@ func (ex *Exception) Display() {
 func IsNull(o Object) bool {
 	switch o.(type) {
 	case *Null:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsErr checks whether a result is Exception
+func IsErr(o Object) bool {
+	switch o.(type) {
+	case *Exception:
 		return true
 	default:
 		return false
