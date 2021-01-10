@@ -4,7 +4,7 @@ Implement stripping comments
 Add support for hex and binary numlits
 Add infix parsing for op-assign operators
 Add more shell commands
-Add error handling for Eval
+Add EOF checking to parser (if reached EOF in the middle of parsing, return error)
 
 //*--------------| GRAMMAR |--------------*/
 
