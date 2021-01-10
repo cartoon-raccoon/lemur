@@ -34,30 +34,38 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 		ret := &object.StmtResults{}
 		ret.Results = []object.Object{}
 		for _, stmt := range node.(*ast.Program).Statements {
+			if ret, ok := stmt.(*ast.ReturnStatement); ok {
+				return e.Evaluate(ret)
+			}
 			ret.Results = append(ret.Results, e.Evaluate(stmt))
 		}
 		return ret
 	case ast.Statement:
+		stmt := node.(ast.Statement)
 		switch node.(ast.Statement).(type) {
 		case *ast.LetStatement:
-			letstmt := node.(ast.Statement).(*ast.LetStatement)
+			letstmt := stmt.(*ast.LetStatement)
 			e.Data[letstmt.Name.String()] = e.Evaluate(letstmt.Value)
 			return NULL
 		case *ast.ExprStatement:
-			expr := node.(ast.Statement).(*ast.ExprStatement)
+			expr := stmt.(*ast.ExprStatement)
 			return e.Evaluate(expr.Expression)
 		case *ast.ReturnStatement:
-
+			retstmt := stmt.(*ast.ReturnStatement)
+			return e.Evaluate(retstmt.Value)
 		case *ast.BlockStatement:
 			ret := &object.StmtResults{}
 			ret.Results = []object.Object{}
-			blkstmt := node.(ast.Statement).(*ast.BlockStatement)
+			blkstmt := stmt.(*ast.BlockStatement)
 			for _, stmt := range blkstmt.Statements {
+				if ret, ok := stmt.(*ast.ReturnStatement); ok {
+					return e.Evaluate(ret)
+				}
 				ret.Results = append(ret.Results, e.Evaluate(stmt))
 			}
 			return ret
 		default:
-			return nil
+			return NULL
 		}
 	case ast.Expression:
 		switch node.(ast.Expression).(type) {
@@ -91,11 +99,12 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 					return e.Evaluate(ifexpr.Alternative.(*ast.IfExpression))
 				default:
 					//todo: throw error
-					return nil
+					return NULL
 				}
 			}
 		case *ast.FnLiteral:
 		case *ast.FunctionCall:
+		case *ast.DotExpression:
 		case *ast.Int:
 			intexpr := node.(ast.Expression).(*ast.Int)
 			return &object.Integer{Value: intexpr.Inner}
