@@ -28,6 +28,11 @@ func (i *Identifier) String() string {
 	return i.Value
 }
 
+// Context implements Node for Identifier
+func (i *Identifier) Context() lexer.Context {
+	return i.Token.Pos
+}
+
 //*----------| PrefixExpr |----------*/
 
 // PrefixExpr represents a prefixed expression, such as ! or -
@@ -56,6 +61,11 @@ func (pe *PrefixExpr) String() string {
 	return out.String()
 }
 
+// Context implements Node for PrefixExpr
+func (pe *PrefixExpr) Context() lexer.Context {
+	return pe.Token.Pos
+}
+
 //*----------| InfixExpr |----------*/
 
 // InfixExpr represents an expression with an infixed operator
@@ -82,6 +92,11 @@ func (ie *InfixExpr) String() string {
 	out.WriteString(ie.Right.String() + ")")
 
 	return out.String()
+}
+
+// Context implements Node for InfixExpr
+func (ie *InfixExpr) Context() lexer.Context {
+	return ie.Token.Pos
 }
 
 //*----------| IfExpression |----------*/
@@ -119,6 +134,11 @@ func (ie *IfExpression) String() string {
 	return out.String()
 }
 
+// Context implements Node for IfExpression
+func (ie *IfExpression) Context() lexer.Context {
+	return ie.Token.Pos
+}
+
 //*----------| Fnliteral |----------*/
 
 // FnLiteral represents a function declaration in Monkey
@@ -150,6 +170,11 @@ func (fl *FnLiteral) String() string {
 	out.WriteString(fl.Body.String())
 
 	return out.String()
+}
+
+// Context implements Node for FnLiteral
+func (fl *FnLiteral) Context() lexer.Context {
+	return fl.Token.Pos
 }
 
 //*----------| FunctionCall |----------*/
@@ -185,6 +210,11 @@ func (fc *FunctionCall) String() string {
 	return out.String()
 }
 
+// Context implements Node for FunctionCall
+func (fc *FunctionCall) Context() lexer.Context {
+	return fc.Token.Pos
+}
+
 //*----------| DotExpression |----------*/
 
 // DotExpression defines a dot expression [EXPR].[EXPR]
@@ -212,6 +242,11 @@ func (de *DotExpression) String() string {
 	out.WriteString(de.Right.String())
 
 	return out.String()
+}
+
+// Context implements Node for DotExpression
+func (de *DotExpression) Context() lexer.Context {
+	return de.Token.Pos
 }
 
 //*----------| Literals |----------*/
@@ -243,6 +278,11 @@ func (i *Int) String() string {
 	return i.Token.Literal
 }
 
+// Context implements Node for Int
+func (i *Int) Context() lexer.Context {
+	return i.Token.Pos
+}
+
 func intFromRaw(raw string) Literal {
 	num, err := strconv.ParseInt(raw, 0, 64)
 	if err != nil {
@@ -269,6 +309,11 @@ func (f *Flt) TokenLiteral() string {
 }
 func (f *Flt) String() string {
 	return f.Token.Literal
+}
+
+// Context implements Node for Flt
+func (f *Flt) Context() lexer.Context {
+	return f.Token.Pos
 }
 
 func fltFromRaw(raw string) Literal {
@@ -305,6 +350,11 @@ func (s *Str) String() string {
 	return out.String()
 }
 
+// Context implements Node for Str
+func (s *Str) Context() lexer.Context {
+	return s.Token.Pos
+}
+
 func strFromLit(raw string) Literal {
 	// todo: add method to parse escaped chars
 	return &Str{Inner: raw}
@@ -330,4 +380,9 @@ func (b *Bool) TokenLiteral() string {
 // TokenLiteral implements Node for Bool
 func (b *Bool) String() string {
 	return b.Token.Literal
+}
+
+// Context implements Node for Bool
+func (b *Bool) Context() lexer.Context {
+	return b.Token.Pos
 }

@@ -20,6 +20,7 @@ implement Node, so that they can be represented on the AST.
 // Node defines the general behaviour for a node in the AST
 type Node interface {
 	TokenLiteral() string
+	Context() lexer.Context
 	String() string
 }
 
@@ -64,6 +65,11 @@ func (p *Program) String() string {
 	return out.String()
 }
 
+// Context implements Node for Program
+func (p *Program) Context() lexer.Context {
+	return lexer.Context{}
+}
+
 // FunctionDecl represents a function declaration
 type FunctionDecl struct {
 	Token  lexer.Token
@@ -96,4 +102,9 @@ func (fd *FunctionDecl) String() string {
 	out.WriteString(fd.Body.String())
 
 	return out.String()
+}
+
+// Context implements Node for FunctionDecl
+func (fd *FunctionDecl) Context() lexer.Context {
+	return fd.Token.Pos
 }

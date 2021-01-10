@@ -36,6 +36,11 @@ func (ls *LetStatement) String() string {
 
 }
 
+// Context implements Node for LetStatement
+func (ls *LetStatement) Context() lexer.Context {
+	return ls.Token.Pos
+}
+
 // ExprStatement - represents a bare expression in Monkey
 type ExprStatement struct {
 	Token      lexer.Token
@@ -55,6 +60,11 @@ func (es *ExprStatement) String() string {
 		out.WriteString(es.Expression.String())
 	}
 	return out.String()
+}
+
+// Context implements Node for ExprStatement
+func (es *ExprStatement) Context() lexer.Context {
+	return es.Token.Pos
 }
 
 // ReturnStatement - represents a return statement in the AST
@@ -83,6 +93,11 @@ func (rs *ReturnStatement) String() string {
 
 }
 
+// Context implements Node for ReturnStatement
+func (rs *ReturnStatement) Context() lexer.Context {
+	return rs.Token.Pos
+}
+
 // BlockStatement represents a block of statements surrounded by braces
 type BlockStatement struct {
 	Token      lexer.Token
@@ -107,4 +122,9 @@ func (bs *BlockStatement) String() string {
 	out.WriteString("}")
 
 	return out.String()
+}
+
+// Context implements Node for BlockStatement
+func (bs *BlockStatement) Context() lexer.Context {
+	return bs.Token.Pos
 }
