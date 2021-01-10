@@ -292,5 +292,18 @@ func (p *Parser) parseDotExpression(left ast.Expression) ast.Expression {
 
 	exp.Right = p.parseExpression(DOT)
 
-	return exp
+	switch exp.Right.(type) {
+	case *ast.DotExpression:
+		return exp
+	case *ast.Identifier:
+		return exp
+	case *ast.FunctionCall:
+		return exp
+	default:
+		p.errors = append(p.errors, Err{
+			Msg: fmt.Sprintf("Expected function call or field, got %T", exp.Right),
+			Con: p.current.Pos,
+		})
+		return nil
+	}
 }
