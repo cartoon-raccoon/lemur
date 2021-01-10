@@ -115,11 +115,12 @@ func (bs *BlockStatement) TokenLiteral() string {
 func (bs *BlockStatement) String() string {
 	var out bytes.Buffer
 
-	out.WriteString("{")
+	out.WriteString("{\n")
 	for _, s := range bs.Statements {
 		out.WriteString(s.String())
+		out.WriteByte('\n')
 	}
-	out.WriteString("}")
+	out.WriteString("\n}")
 
 	return out.String()
 }
