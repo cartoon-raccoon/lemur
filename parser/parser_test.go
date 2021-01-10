@@ -691,3 +691,68 @@ func TestCallExpression(t *testing.T) {
 		t.Logf("%+v\n", call)
 	}
 }
+
+func TestDotExprParsing(t *testing.T) {
+	tests := []struct {
+		Input    string
+		Expected string
+	}{
+		{"thing.functioncall()", "thing.functioncall()"},
+		{"\"string\".join()", "\"string\".join()"},
+	}
+
+	for i, test := range tests {
+		l := lexer.New(test.Input)
+		p, err := New(l)
+		if err != nil {
+			t.Errorf("Test %d: %s", i, err)
+			continue
+		}
+		switch i {
+		case 0:
+			if p.current.Type != lexer.IDENT && p.next.Type != lexer.DOT {
+				t.Errorf("Tokens not parsed correctly")
+				t.Logf("Current: %s", p.current.Type)
+				t.Logf("Next: %s", p.next.Type)
+				continue
+			}
+		case 1:
+			if p.current.Type != lexer.STRLIT && p.next.Type != lexer.DOT {
+				t.Errorf("Tokens not parsed correctly")
+				t.Logf("Current: %s", p.current.Type)
+				t.Logf("Next: %s", p.next.Type)
+				continue
+			}
+		default:
+			t.Fatalf("How the hell did you get here?")
+		}
+		prog := p.Parse()
+		if p.checkErrors() != nil {
+			t.Errorf("Errors in test %d", i)
+			for _, e := range p.checkErrors() {
+				t.Log(e.Error())
+			}
+			continue
+		}
+		if len := len(prog.Statements); len != 1 {
+			t.Errorf("Test %d: Expected 1 statement, got %d", i, len)
+			continue
+		}
+		expr, ok := prog.Statements[0].(*ast.ExprStatement)
+		if !ok {
+			t.Errorf("Test %d: Not an exprstmt", i)
+			continue
+		}
+		dotexpr, ok := expr.Expression.(*ast.DotExpression)
+		if !ok {
+			t.Errorf("Test %d: not a dotexpr, got %T", i, expr.Expression)
+			t.Logf("(%s)", expr.Expression.String())
+			continue
+		}
+
+		if str := dotexpr.String(); str != test.Expected {
+			t.Errorf("Test %d: got %s, expected %s", i, str, test.Expected)
+			continue
+		}
+	}
+}

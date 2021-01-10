@@ -42,6 +42,8 @@ const (
 	LOGIC
 	// PREFIX - -x or !x
 	PREFIX
+	// DOT - a dot expression
+	DOT
 	// CALL - a function call
 	CALL
 )
@@ -64,6 +66,7 @@ var precedences = map[string]int{
 	lexer.BSL:    BITWISE,
 	lexer.LOR:    LOGIC,
 	lexer.LAND:   LOGIC,
+	lexer.DOT:    DOT,
 	lexer.LPAREN: CALL,
 }
 
@@ -122,6 +125,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerInfixFn(lexer.LAND, p.parseInfixExpr)
 	p.registerInfixFn(lexer.LOR, p.parseInfixExpr)
 	p.registerInfixFn(lexer.LPAREN, p.parseFunctionCall)
+	p.registerInfixFn(lexer.DOT, p.parseDotExpression)
 
 	return p, nil
 }

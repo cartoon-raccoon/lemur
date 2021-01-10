@@ -281,3 +281,16 @@ func (p *Parser) parseCallArguments() []ast.Expression {
 
 	return args
 }
+
+func (p *Parser) parseDotExpression(left ast.Expression) ast.Expression {
+	exp := &ast.DotExpression{Token: p.current, Left: left}
+
+	//p.current is DOT
+
+	p.advance()
+	//p.current is now the start of the next expr
+
+	exp.Right = p.parseExpression(DOT)
+
+	return exp
+}
