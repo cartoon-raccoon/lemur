@@ -1,7 +1,10 @@
 package eval
 
 import (
+	"fmt"
+
 	"github.com/cartoon-raccoon/monkey-jit/ast"
+	"github.com/cartoon-raccoon/monkey-jit/lexer"
 	"github.com/cartoon-raccoon/monkey-jit/object"
 )
 
@@ -28,7 +31,7 @@ func New() *Evaluator {
 }
 
 // Evaluate runs the evaluator, walking the tree and executing code
-func (e *Evaluator) Evaluate(node ast.Node) object.Object {
+func (e *Evaluator) Evaluate(node ast.Node) (object.Object, error) {
 	switch node.(type) {
 	case *ast.Program:
 		ret := &object.StmtResults{}
@@ -37,16 +40,24 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 			if ret, ok := stmt.(*ast.ReturnStatement); ok {
 				return e.Evaluate(ret)
 			}
-			ret.Results = append(ret.Results, e.Evaluate(stmt))
+			res, err := e.Evaluate(stmt)
+			if err != nil {
+				return NULL, err
+			}
+			ret.Results = append(ret.Results, res)
 		}
-		return ret
+		return ret, nil
 	case ast.Statement:
 		stmt := node.(ast.Statement)
 		switch node.(ast.Statement).(type) {
 		case *ast.LetStatement:
 			letstmt := stmt.(*ast.LetStatement)
-			e.Data[letstmt.Name.String()] = e.Evaluate(letstmt.Value)
-			return NULL
+			val, err := e.Evaluate(letstmt.Value)
+			if err != nil {
+				return NULL, err
+			}
+			e.Data[letstmt.Name.String()] = val
+			return NULL, nil
 		case *ast.ExprStatement:
 			expr := stmt.(*ast.ExprStatement)
 			return e.Evaluate(expr.Expression)
@@ -61,11 +72,15 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 				if ret, ok := stmt.(*ast.ReturnStatement); ok {
 					return e.Evaluate(ret)
 				}
-				ret.Results = append(ret.Results, e.Evaluate(stmt))
+				res, err := e.Evaluate(stmt)
+				if err != nil {
+					return NULL, err
+				}
+				ret.Results = append(ret.Results, res)
 			}
-			return ret
+			return ret, nil
 		default:
-			return NULL
+			return NULL, nil
 		}
 	case ast.Expression:
 		switch node.(ast.Expression).(type) {
@@ -73,9 +88,11 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 			ident := node.(ast.Expression).(*ast.Identifier)
 			data, ok := e.Data[ident.Value]
 			if !ok {
-				//throw error
+				return NULL, Err{
+					Msg: "Variable not yet declared",
+				}
 			}
-			return data
+			return data, nil
 		case *ast.PrefixExpr:
 			pexpr := node.(ast.Expression).(*ast.PrefixExpr)
 			return e.evalPrefixExpr(pexpr)
@@ -84,9 +101,12 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 			return e.evalInfixExpr(iexpr)
 		case *ast.IfExpression:
 			ifexpr := node.(ast.Expression).(*ast.IfExpression)
-			condition := e.Evaluate(ifexpr.Condition)
+			condition, err := e.Evaluate(ifexpr.Condition)
+			if err != nil {
+				return NULL, err
+			}
 			if condition == nil {
-				//todo: return error
+				return NULL, Err{"If condition returned nil", ifexpr.Context()}
 			}
 			if evaluateTruthiness(condition) {
 				return e.Evaluate(ifexpr.Result)
@@ -99,29 +119,42 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 					return e.Evaluate(ifexpr.Alternative.(*ast.IfExpression))
 				default:
 					//todo: throw error
-					return NULL
+					return NULL, Err{"Invalid else branch", ifexpr.Alternative.Context()}
 				}
 			}
 		case *ast.FnLiteral:
+			//todo
 		case *ast.FunctionCall:
+			//todo
 		case *ast.DotExpression:
+			//todo
 		case *ast.Int:
 			intexpr := node.(ast.Expression).(*ast.Int)
-			return &object.Integer{Value: intexpr.Inner}
+			return &object.Integer{Value: intexpr.Inner}, nil
 		case *ast.Flt:
 			fltexpr := node.(ast.Expression).(*ast.Flt)
-			return &object.Float{Value: fltexpr.Inner}
+			return &object.Float{Value: fltexpr.Inner}, nil
 		case *ast.Str:
 			strexpr := node.(ast.Expression).(*ast.Str)
-			return &object.String{Value: strexpr.Inner}
+			return &object.String{Value: strexpr.Inner}, nil
 		case *ast.Bool:
 			boolexpr := node.(ast.Expression).(*ast.Bool)
-			return nativeBooltoObj(boolexpr.Inner)
+			return nativeBooltoObj(boolexpr.Inner), nil
 		default:
-			return NULL
+			return NULL, nil
 		}
 	default:
-		return nil
+		return NULL, Err{"Unimplemented type", node.Context()}
 	}
-	return nil
+	return NULL, Err{"Evaluate: unreachable code", node.Context()}
+}
+
+// Err - Error returned by the evaluator
+type Err struct {
+	Msg string
+	Con lexer.Context
+}
+
+func (e Err) Error() string {
+	return fmt.Sprintf("%s - Line %d, Col %d", e.Msg, e.Con.Line, e.Con.Col)
 }

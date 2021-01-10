@@ -51,7 +51,10 @@ func TestExprStmtEval(t *testing.T) {
 			t.Fatalf("Test %d: Program is nil", i)
 		}
 		eval := Evaluator{}
-		res := eval.Evaluate(prog)
+		res, err := eval.Evaluate(prog)
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
 		if res == nil {
 			t.Fatalf("Test %d: Could not evaluate", i)
 		}
