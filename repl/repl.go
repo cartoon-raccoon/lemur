@@ -10,6 +10,7 @@ import (
 
 	"github.com/cartoon-raccoon/monkey-jit/eval"
 	"github.com/cartoon-raccoon/monkey-jit/lexer"
+	"github.com/cartoon-raccoon/monkey-jit/object"
 	"github.com/cartoon-raccoon/monkey-jit/parser"
 )
 
@@ -35,6 +36,7 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 	fmt.Printf("running on (%s %s)\n", runtime.GOOS, runtime.GOARCH)
 	fmt.Printf("Welcome, %s\n", username)
 
+	env := object.NewEnv()
 	evaluator := eval.New()
 
 	for {
@@ -74,7 +76,7 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 			continue
 		}
 
-		obj := evaluator.Evaluate(prog)
+		obj := evaluator.Evaluate(prog, env)
 
 		if obj == nil {
 			continue

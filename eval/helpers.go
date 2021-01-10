@@ -8,26 +8,26 @@ import (
 	"github.com/cartoon-raccoon/monkey-jit/object"
 )
 
-func (e *Evaluator) evalPrefixExpr(expr *ast.PrefixExpr) object.Object {
+func (e *Evaluator) evalPrefixExpr(expr *ast.PrefixExpr, env *object.Environment) object.Object {
 	switch expr.Operator {
 	case "!":
-		return e.evalBangPExpr(expr.Right)
+		return e.evalBangPExpr(expr.Right, env)
 	case "-":
-		return e.evalMinusPExpr(expr.Right)
+		return e.evalMinusPExpr(expr.Right, env)
 	default:
 		return &object.Exception{Msg: "evalPrefixExpr: unreachable", Con: expr.Token.Pos}
 	}
 }
 
-func (e *Evaluator) evalBangPExpr(expr ast.Expression) object.Object {
-	pexpr := e.Evaluate(expr)
+func (e *Evaluator) evalBangPExpr(expr ast.Expression, env *object.Environment) object.Object {
+	pexpr := e.Evaluate(expr, env)
 
 	truth := evaluateTruthiness(pexpr)
 	return nativeBooltoObj(!truth)
 }
 
-func (e *Evaluator) evalMinusPExpr(expr ast.Expression) object.Object {
-	pexpr := e.Evaluate(expr)
+func (e *Evaluator) evalMinusPExpr(expr ast.Expression, env *object.Environment) object.Object {
+	pexpr := e.Evaluate(expr, env)
 
 	switch pexpr.(type) {
 	case *object.Integer:
@@ -41,9 +41,9 @@ func (e *Evaluator) evalMinusPExpr(expr ast.Expression) object.Object {
 	}
 }
 
-func (e *Evaluator) evalInfixExpr(expr *ast.InfixExpr) object.Object {
-	left := e.Evaluate(expr.Left)
-	right := e.Evaluate(expr.Right)
+func (e *Evaluator) evalInfixExpr(expr *ast.InfixExpr, env *object.Environment) object.Object {
+	left := e.Evaluate(expr.Left, env)
+	right := e.Evaluate(expr.Right, env)
 
 	if left == nil {
 		return &object.Exception{Msg: "Could not evaluate LHS", Con: expr.Context()}

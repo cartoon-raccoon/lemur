@@ -56,7 +56,8 @@ func TestExprStmtEval(t *testing.T) {
 			t.Fatalf("Test %d: Program is nil", i)
 		}
 		eval := Evaluator{}
-		res := eval.Evaluate(prog)
+		env := object.NewEnv()
+		res := eval.Evaluate(prog, env)
 		if res == nil {
 			t.Fatalf("Test %d: Could not evaluate", i)
 		}
@@ -87,7 +88,8 @@ func TestIfExprEval(t *testing.T) {
 		t.Fatalf("Program is nil")
 	}
 	eval := Evaluator{}
-	res := eval.Evaluate(prog)
+	env := object.NewEnv()
+	res := eval.Evaluate(prog, env)
 	if res == nil {
 		t.Fatalf("Could not evaluate program")
 	}

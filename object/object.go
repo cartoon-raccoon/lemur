@@ -29,6 +29,9 @@ const (
 
 	//PRES - Program result
 	PRES = "PROG_RES"
+
+	//ENVIRONMENT - Environment
+	ENVIRONMENT = "ENV_OBJ"
 )
 
 // Object represents any object returnable from an expression
@@ -37,6 +40,31 @@ type Object interface {
 	Inspect() string
 	Display()
 }
+
+// Environment represents the execution environment
+type Environment struct {
+	Data map[string]Object
+}
+
+// NewEnv - Returns a new fresh environment
+func NewEnv() *Environment {
+	env := &Environment{}
+	env.Data = make(map[string]Object)
+
+	return env
+}
+
+// Type implements Object for Environment
+func (env *Environment) Type() string { return ENVIRONMENT }
+
+// Inspect implements Object for Environment
+func (env *Environment) Inspect() string {
+	//todo
+	return "Environment"
+}
+
+// Display implements Object for Environment
+func (env *Environment) Display() {}
 
 // Integer represents an integer
 type Integer struct {
@@ -161,6 +189,14 @@ func (pr *StmtResults) Inspect() string {
 	return strings.Join(pres, "\n")
 }
 
+// Display implements Object for StmtResults
+func (pr *StmtResults) Display() {
+	inspect := pr.Inspect()
+	if len(strings.TrimSpace(inspect)) != 0 {
+		fmt.Printf("%s\n", inspect)
+	}
+}
+
 // Exception - an error type to return
 type Exception struct {
 	Msg string
@@ -178,14 +214,6 @@ func (ex *Exception) Inspect() string {
 // Display implements Object for Exception
 func (ex *Exception) Display() {
 	fmt.Printf(ex.Inspect())
-}
-
-// Display implements Object for StmtResults
-func (pr *StmtResults) Display() {
-	inspect := pr.Inspect()
-	if len(strings.TrimSpace(inspect)) != 0 {
-		fmt.Printf("%s\n", inspect)
-	}
 }
 
 // IsNull checks whether a result is Null

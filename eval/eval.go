@@ -31,16 +31,16 @@ func New() *Evaluator {
 }
 
 // Evaluate runs the evaluator, walking the tree and executing code
-func (e *Evaluator) Evaluate(node ast.Node) object.Object {
+func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Object {
 	switch node.(type) {
 	case *ast.Program:
 		res := &object.StmtResults{}
 		res.Results = []object.Object{}
 		for _, stmt := range node.(*ast.Program).Statements {
 			if ret, ok := stmt.(*ast.ReturnStatement); ok {
-				return e.Evaluate(ret)
+				return e.Evaluate(ret, env)
 			}
-			result := e.Evaluate(stmt)
+			result := e.Evaluate(stmt, env)
 			res.Results = append(res.Results, result)
 		}
 		return res
@@ -49,19 +49,19 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 		switch node.(ast.Statement).(type) {
 		case *ast.LetStatement:
 			letstmt := stmt.(*ast.LetStatement)
-			val := e.Evaluate(letstmt.Value)
-			e.Data[letstmt.Name.String()] = val
+			val := e.Evaluate(letstmt.Value, env)
+			env.Data[letstmt.Name.String()] = val
 			return NULL
 		case *ast.ExprStatement:
 			expr := stmt.(*ast.ExprStatement)
-			return e.Evaluate(expr.Expression)
+			return e.Evaluate(expr.Expression, env)
 		case *ast.ReturnStatement:
 			retstmt := stmt.(*ast.ReturnStatement)
-			res := e.Evaluate(retstmt.Value)
+			res := e.Evaluate(retstmt.Value, env)
 			return &object.Return{Inner: res}
 		case *ast.BlockStatement:
 			blkstmt := stmt.(*ast.BlockStatement)
-			return e.evalBlockStmt(blkstmt)
+			return e.evalBlockStmt(blkstmt, env)
 		default:
 			return NULL
 		}
@@ -69,7 +69,7 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 		switch node.(ast.Expression).(type) {
 		case *ast.Identifier:
 			ident := node.(ast.Expression).(*ast.Identifier)
-			data, ok := e.Data[ident.Value]
+			data, ok := env.Data[ident.Value]
 			if !ok {
 				return &object.Exception{
 					Msg: "Variable not yet declared",
@@ -79,13 +79,13 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 			return data
 		case *ast.PrefixExpr:
 			pexpr := node.(ast.Expression).(*ast.PrefixExpr)
-			return e.evalPrefixExpr(pexpr)
+			return e.evalPrefixExpr(pexpr, env)
 		case *ast.InfixExpr:
 			iexpr := node.(ast.Expression).(*ast.InfixExpr)
-			return e.evalInfixExpr(iexpr)
+			return e.evalInfixExpr(iexpr, env)
 		case *ast.IfExpression:
 			ifexpr := node.(ast.Expression).(*ast.IfExpression)
-			condition := e.Evaluate(ifexpr.Condition)
+			condition := e.Evaluate(ifexpr.Condition, env)
 			if condition == nil {
 				return &object.Exception{
 					Msg: "If condition returned nil",
@@ -93,14 +93,14 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 				}
 			}
 			if evaluateTruthiness(condition) {
-				return e.Evaluate(ifexpr.Result)
+				return e.Evaluate(ifexpr.Result, env)
 			}
 			if ifexpr.Alternative != nil {
 				switch ifexpr.Alternative.(type) {
 				case *ast.BlockStatement:
-					return e.Evaluate(ifexpr.Alternative.(*ast.BlockStatement))
+					return e.Evaluate(ifexpr.Alternative.(*ast.BlockStatement), env)
 				case *ast.IfExpression:
-					return e.Evaluate(ifexpr.Alternative.(*ast.IfExpression))
+					return e.Evaluate(ifexpr.Alternative.(*ast.IfExpression), env)
 				default:
 					return &object.Exception{
 						Msg: "Invalid else branch",
@@ -153,11 +153,11 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 	}
 }
 
-func (e *Evaluator) evalProgram(prog *ast.Program) (object.Object, error) {
+func (e *Evaluator) evalProgram(prog *ast.Program, env *object.Environment) (object.Object, error) {
 	var result object.Object
 
 	for _, stmt := range prog.Statements {
-		result := e.Evaluate(stmt)
+		result := e.Evaluate(stmt, env)
 
 		if returnVal, ok := result.(*object.Return); ok {
 			return returnVal.Inner, nil
@@ -167,11 +167,11 @@ func (e *Evaluator) evalProgram(prog *ast.Program) (object.Object, error) {
 	return result, nil
 }
 
-func (e *Evaluator) evalBlockStmt(stmt *ast.BlockStatement) object.Object {
+func (e *Evaluator) evalBlockStmt(stmt *ast.BlockStatement, env *object.Environment) object.Object {
 	var result object.Object
 
 	for _, stmt := range stmt.Statements {
-		result := e.Evaluate(stmt)
+		result = e.Evaluate(stmt, env)
 		if !object.IsNull(result) && result.Type() == object.RETURN {
 			return result
 		}
