@@ -3,6 +3,8 @@ package object
 import (
 	"fmt"
 	"strings"
+
+	"github.com/cartoon-raccoon/monkey-jit/lexer"
 )
 
 const (
@@ -18,6 +20,9 @@ const (
 	NULL = "NULL_OBJ"
 	//RETURN - Return value of a block
 	RETURN = "RETURN_OBJ"
+
+	//ERROR - Error object
+	ERROR = "ERROR_OBJ"
 
 	//IDENT - Identifier
 	IDENT = "IDENT_OBJ"
@@ -154,6 +159,25 @@ func (pr *StmtResults) Inspect() string {
 		}
 	}
 	return strings.Join(pres, "\n")
+}
+
+// Exception - an error type to return
+type Exception struct {
+	Msg string
+	Con lexer.Context
+}
+
+// Type implements Object for Exception
+func (ex *Exception) Type() string { return ERROR }
+
+// Inspect implements Object for Exception
+func (ex *Exception) Inspect() string {
+	return fmt.Sprintf("%s - Line %d, Col %d", ex.Msg, ex.Con.Line, ex.Con.Col)
+}
+
+// Display implements Object for Exception
+func (ex *Exception) Display() {
+	fmt.Printf(ex.Inspect())
 }
 
 // Display implements Object for StmtResults

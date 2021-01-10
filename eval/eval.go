@@ -31,7 +31,7 @@ func New() *Evaluator {
 }
 
 // Evaluate runs the evaluator, walking the tree and executing code
-func (e *Evaluator) Evaluate(node ast.Node) (object.Object, error) {
+func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 	switch node.(type) {
 	case *ast.Program:
 		res := &object.StmtResults{}
@@ -40,39 +40,30 @@ func (e *Evaluator) Evaluate(node ast.Node) (object.Object, error) {
 			if ret, ok := stmt.(*ast.ReturnStatement); ok {
 				return e.Evaluate(ret)
 			}
-			result, err := e.Evaluate(stmt)
-			if err != nil {
-				return NULL, err
-			}
+			result := e.Evaluate(stmt)
 			res.Results = append(res.Results, result)
 		}
-		return res, nil
+		return res
 	case ast.Statement:
 		stmt := node.(ast.Statement)
 		switch node.(ast.Statement).(type) {
 		case *ast.LetStatement:
 			letstmt := stmt.(*ast.LetStatement)
-			val, err := e.Evaluate(letstmt.Value)
-			if err != nil {
-				return NULL, err
-			}
+			val := e.Evaluate(letstmt.Value)
 			e.Data[letstmt.Name.String()] = val
-			return NULL, nil
+			return NULL
 		case *ast.ExprStatement:
 			expr := stmt.(*ast.ExprStatement)
 			return e.Evaluate(expr.Expression)
 		case *ast.ReturnStatement:
 			retstmt := stmt.(*ast.ReturnStatement)
-			res, err := e.Evaluate(retstmt.Value)
-			if err != nil {
-				return NULL, err
-			}
-			return &object.Return{Inner: res}, nil
+			res := e.Evaluate(retstmt.Value)
+			return &object.Return{Inner: res}
 		case *ast.BlockStatement:
 			blkstmt := stmt.(*ast.BlockStatement)
 			return e.evalBlockStmt(blkstmt)
 		default:
-			return NULL, nil
+			return NULL
 		}
 	case ast.Expression:
 		switch node.(ast.Expression).(type) {
@@ -80,11 +71,12 @@ func (e *Evaluator) Evaluate(node ast.Node) (object.Object, error) {
 			ident := node.(ast.Expression).(*ast.Identifier)
 			data, ok := e.Data[ident.Value]
 			if !ok {
-				return NULL, Err{
+				return &object.Exception{
 					Msg: "Variable not yet declared",
+					Con: ident.Context(),
 				}
 			}
-			return data, nil
+			return data
 		case *ast.PrefixExpr:
 			pexpr := node.(ast.Expression).(*ast.PrefixExpr)
 			return e.evalPrefixExpr(pexpr)
@@ -93,12 +85,12 @@ func (e *Evaluator) Evaluate(node ast.Node) (object.Object, error) {
 			return e.evalInfixExpr(iexpr)
 		case *ast.IfExpression:
 			ifexpr := node.(ast.Expression).(*ast.IfExpression)
-			condition, err := e.Evaluate(ifexpr.Condition)
-			if err != nil {
-				return NULL, err
-			}
+			condition := e.Evaluate(ifexpr.Condition)
 			if condition == nil {
-				return NULL, Err{"If condition returned nil", ifexpr.Context()}
+				return &object.Exception{
+					Msg: "If condition returned nil",
+					Con: ifexpr.Context(),
+				}
 			}
 			if evaluateTruthiness(condition) {
 				return e.Evaluate(ifexpr.Result)
@@ -110,44 +102,62 @@ func (e *Evaluator) Evaluate(node ast.Node) (object.Object, error) {
 				case *ast.IfExpression:
 					return e.Evaluate(ifexpr.Alternative.(*ast.IfExpression))
 				default:
-					return NULL, Err{"Invalid else branch", ifexpr.Alternative.Context()}
+					return &object.Exception{
+						Msg: "Invalid else branch",
+						Con: ifexpr.Alternative.Context(),
+					}
 				}
 			}
 		case *ast.FnLiteral:
 			//todo
+			return &object.Exception{
+				Msg: "FnLiteral: unimplemented",
+				Con: node.Context(),
+			}
 		case *ast.FunctionCall:
 			//todo
+			return &object.Exception{
+				Msg: "FuncCall: unimplemented",
+				Con: node.Context(),
+			}
 		case *ast.DotExpression:
 			//todo
+			return &object.Exception{
+				Msg: "DotExpr: unimplemented",
+				Con: node.Context(),
+			}
 		case *ast.Int:
 			intexpr := node.(ast.Expression).(*ast.Int)
-			return &object.Integer{Value: intexpr.Inner}, nil
+			return &object.Integer{Value: intexpr.Inner}
 		case *ast.Flt:
 			fltexpr := node.(ast.Expression).(*ast.Flt)
-			return &object.Float{Value: fltexpr.Inner}, nil
+			return &object.Float{Value: fltexpr.Inner}
 		case *ast.Str:
 			strexpr := node.(ast.Expression).(*ast.Str)
-			return &object.String{Value: strexpr.Inner}, nil
+			return &object.String{Value: strexpr.Inner}
 		case *ast.Bool:
 			boolexpr := node.(ast.Expression).(*ast.Bool)
-			return nativeBooltoObj(boolexpr.Inner), nil
+			return nativeBooltoObj(boolexpr.Inner)
 		default:
-			return NULL, nil
+			return NULL
 		}
 	default:
-		return NULL, Err{"Unimplemented type", node.Context()}
+		return &object.Exception{
+			Msg: "Unimplemented type",
+			Con: node.Context(),
+		}
 	}
-	return NULL, Err{"Evaluate: unreachable code", node.Context()}
+	return &object.Exception{
+		Msg: "Evaluate: unreachable code",
+		Con: node.Context(),
+	}
 }
 
 func (e *Evaluator) evalProgram(prog *ast.Program) (object.Object, error) {
 	var result object.Object
 
 	for _, stmt := range prog.Statements {
-		result, err := e.Evaluate(stmt)
-		if err != nil {
-			return NULL, err
-		}
+		result := e.Evaluate(stmt)
 
 		if returnVal, ok := result.(*object.Return); ok {
 			return returnVal.Inner, nil
@@ -157,20 +167,16 @@ func (e *Evaluator) evalProgram(prog *ast.Program) (object.Object, error) {
 	return result, nil
 }
 
-func (e *Evaluator) evalBlockStmt(stmt *ast.BlockStatement) (object.Object, error) {
+func (e *Evaluator) evalBlockStmt(stmt *ast.BlockStatement) object.Object {
 	var result object.Object
 
 	for _, stmt := range stmt.Statements {
-		result, err := e.Evaluate(stmt)
-		if err != nil {
-			return NULL, err
-		}
-
+		result := e.Evaluate(stmt)
 		if !object.IsNull(result) && result.Type() == object.RETURN {
-			return result, nil
+			return result
 		}
 	}
-	return result, nil
+	return result
 }
 
 // Err - Error returned by the evaluator

@@ -8,52 +8,48 @@ import (
 	"github.com/cartoon-raccoon/monkey-jit/object"
 )
 
-func (e *Evaluator) evalPrefixExpr(expr *ast.PrefixExpr) (object.Object, error) {
+func (e *Evaluator) evalPrefixExpr(expr *ast.PrefixExpr) object.Object {
 	switch expr.Operator {
 	case "!":
 		return e.evalBangPExpr(expr.Right)
 	case "-":
 		return e.evalMinusPExpr(expr.Right)
 	default:
-		return NULL, Err{"evalPrefixExpr: unreachable", expr.Token.Pos}
+		return &object.Exception{Msg: "evalPrefixExpr: unreachable", Con: expr.Token.Pos}
 	}
 }
 
-func (e *Evaluator) evalBangPExpr(expr ast.Expression) (object.Object, error) {
-	pexpr, err := e.Evaluate(expr)
-	if err != nil {
-		return NULL, err
-	}
+func (e *Evaluator) evalBangPExpr(expr ast.Expression) object.Object {
+	pexpr := e.Evaluate(expr)
+
 	truth := evaluateTruthiness(pexpr)
-	return nativeBooltoObj(!truth), nil
+	return nativeBooltoObj(!truth)
 }
 
-func (e *Evaluator) evalMinusPExpr(expr ast.Expression) (object.Object, error) {
-	pexpr, err := e.Evaluate(expr)
-	if err != nil {
-		return NULL, err
-	}
+func (e *Evaluator) evalMinusPExpr(expr ast.Expression) object.Object {
+	pexpr := e.Evaluate(expr)
+
 	switch pexpr.(type) {
 	case *object.Integer:
 		num := pexpr.(*object.Integer).Value
-		return &object.Integer{Value: -num}, nil
+		return &object.Integer{Value: -num}
 	case *object.Float:
 		num := pexpr.(*object.Float).Value
-		return &object.Float{Value: -num}, nil
+		return &object.Float{Value: -num}
 	default:
-		return NULL, Err{"MINUS usage on boolean or string", expr.Context()}
+		return &object.Exception{Msg: "MINUS usage on boolean or string", Con: expr.Context()}
 	}
 }
 
-func (e *Evaluator) evalInfixExpr(expr *ast.InfixExpr) (object.Object, error) {
-	left, err1 := e.Evaluate(expr.Left)
-	right, err2 := e.Evaluate(expr.Right)
+func (e *Evaluator) evalInfixExpr(expr *ast.InfixExpr) object.Object {
+	left := e.Evaluate(expr.Left)
+	right := e.Evaluate(expr.Right)
 
-	if err1 != nil {
-		return NULL, Err{"Could not evaluate LHS", expr.Context()}
+	if left == nil {
+		return &object.Exception{Msg: "Could not evaluate LHS", Con: expr.Context()}
 	}
-	if err2 != nil {
-		return NULL, Err{"Could not evaluate RHS", expr.Context()}
+	if right == nil {
+		return &object.Exception{Msg: "Could not evaluate RHS", Con: expr.Context()}
 	}
 
 	if isComparisonOp(expr.Operator) {
@@ -62,67 +58,106 @@ func (e *Evaluator) evalInfixExpr(expr *ast.InfixExpr) (object.Object, error) {
 	return e.evaluateSides(left, right, expr.Operator, expr.Context())
 }
 
-func (e *Evaluator) evaluateComp(left, right object.Object, op string, con lexer.Context) (object.Object, error) {
+func (e *Evaluator) evaluateComp(left, right object.Object, op string, con lexer.Context) object.Object {
 	switch left.(type) {
 	case *object.Integer:
 		if right, ok := right.(*object.Integer); ok {
 			left := left.(*object.Integer)
-			return nativeBooltoObj(executeCompInt(left.Value, right.Value, op)), nil
+			return nativeBooltoObj(executeCompInt(left.Value, right.Value, op))
 		}
-		return NULL, Err{fmt.Sprintf("Cannot compare INT and %T", right), con}
+		return &object.Exception{
+			Msg: fmt.Sprintf("Cannot compare INT and %T", right),
+			Con: con,
+		}
 	case *object.Float:
 		if right, ok := right.(*object.Float); ok {
 			left := left.(*object.Float)
-			return nativeBooltoObj(executeCompFlt(left.Value, right.Value, op)), nil
+			return nativeBooltoObj(executeCompFlt(left.Value, right.Value, op))
 		}
-		return NULL, Err{fmt.Sprintf("Cannot compare FLT and %T", right), con}
+		return &object.Exception{
+			Msg: fmt.Sprintf("Cannot compare FLT and %T", right),
+			Con: con,
+		}
 	case *object.String:
 		if right, ok := right.(*object.String); ok {
 			left := left.(*object.String)
-			return nativeBooltoObj(executeCompStr(left.Value, right.Value, op)), nil
+			return nativeBooltoObj(executeCompStr(left.Value, right.Value, op))
 		}
-		return NULL, Err{fmt.Sprintf("Cannot compare STR and %T", right), con}
+		return &object.Exception{
+			Msg: fmt.Sprintf("Cannot compare STR and %T", right),
+			Con: con,
+		}
 	case *object.Boolean:
 		if !isValidBoolOp(op) {
-			return NULL, Err{fmt.Sprintf("Cannot use operator `%s` with BOOL", op), con}
+			return &object.Exception{
+				Msg: fmt.Sprintf("Cannot use operator `%s` with BOOL", op),
+				Con: con,
+			}
 		}
 		if right, ok := right.(*object.Boolean); ok {
 			left := left.(*object.Boolean)
-			return nativeBooltoObj(executeCompBool(left.Value, right.Value, op)), nil
+			return nativeBooltoObj(executeCompBool(left.Value, right.Value, op))
 		}
-		return NULL, Err{fmt.Sprintf("Cannot compare BOOL and %T", right), con}
+		return &object.Exception{
+			Msg: fmt.Sprintf("Cannot compare BOOL and %T", right),
+			Con: con,
+		}
 	case *object.Null:
-		return NULL, Err{"LHS is null", con}
+		return &object.Exception{
+			Msg: "LHS is null",
+			Con: con,
+		}
 	default:
-		return NULL, Err{"e.evaluateComp: Unreachable", con}
+		return &object.Exception{
+			Msg: "e.evaluateComp: Unreachable",
+			Con: con,
+		}
 	}
 }
 
-func (e *Evaluator) evaluateSides(left, right object.Object, op string, con lexer.Context) (object.Object, error) {
+func (e *Evaluator) evaluateSides(left, right object.Object, op string, con lexer.Context) object.Object {
 	switch left.(type) {
 	case *object.Integer:
 		if right, ok := right.(*object.Integer); ok {
 			left := left.(*object.Integer)
-			return &object.Integer{Value: executeOpInt(left.Value, right.Value, op)}, nil
+			return &object.Integer{Value: executeOpInt(left.Value, right.Value, op)}
 		}
-		return NULL, Err{fmt.Sprintf("Cannot operate on INT and %T", right), con}
+		return &object.Exception{
+			Msg: fmt.Sprintf("Cannot operate on INT and %T", right),
+			Con: con,
+		}
 	case *object.Float:
 		if right, ok := right.(*object.Float); ok {
 			if !isValidFltOp(op) {
-				return NULL, Err{fmt.Sprintf("Cannot use operator `%s` on FLT", op), con}
+				return &object.Exception{
+					Msg: fmt.Sprintf("Cannot use operator `%s` on FLT", op),
+					Con: con,
+				}
 			}
 			left := left.(*object.Float)
-			return &object.Float{Value: executeOpFlt(left.Value, right.Value, op)}, nil
+			return &object.Float{Value: executeOpFlt(left.Value, right.Value, op)}
 		}
-		return NULL, Err{fmt.Sprintf("Cannot operate on FLT and %T", right), con}
+		return &object.Exception{
+			Msg: fmt.Sprintf("Cannot operate on FLT and %T", right),
+			Con: con,
+		}
 	case *object.String:
 		panic("eval.evaluateSides (case String): unimplemented")
 	case *object.Boolean:
-		return NULL, Err{fmt.Sprintf("Cannot operate `%s` on BOOL", op), con}
+		return &object.Exception{
+			Msg: fmt.Sprintf("Cannot operate `%s` on BOOL", op),
+			Con: con,
+		}
 	case *object.Null:
-		return NULL, Err{"LHS is null", con}
+		return &object.Exception{
+			Msg: "LHS is null",
+			Con: con,
+		}
 	default:
-		return NULL, Err{"e.evaluateSides: Unreacheable", con}
+		return &object.Exception{
+			Msg: "e.evaluateSides: Unreacheable",
+			Con: con,
+		}
 	}
 }
 

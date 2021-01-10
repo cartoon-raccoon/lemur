@@ -74,11 +74,7 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 			continue
 		}
 
-		obj, err := evaluator.Evaluate(prog)
-		if err != nil {
-			fmt.Printf("%s\n", err.Error())
-			continue
-		}
+		obj := evaluator.Evaluate(prog)
 
 		if obj == nil {
 			continue
