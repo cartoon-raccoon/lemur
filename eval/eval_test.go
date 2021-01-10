@@ -15,19 +15,24 @@ func TestExprStmtEval(t *testing.T) {
 		Inspect  string
 	}{
 		{
-			"1 + 1",
-			&object.Integer{Value: 2},
-			"2",
+			"1 + (1 * 7) / 2",
+			&object.Integer{Value: 4},
+			"4",
 		},
 		{
-			"hello",
+			"(5 + 10 * 2 + 15 / 3) == 2 + -10",
+			&object.Boolean{Value: false},
+			"false",
+		},
+		{
+			"\"hello\"",
 			&object.String{Value: "hello"},
 			"hello",
 		},
 		{
 			"420.69 + 7.4",
 			&object.Float{Value: 428.09},
-			"428.09",
+			"428.090000",
 		},
 	}
 
@@ -53,7 +58,7 @@ func TestExprStmtEval(t *testing.T) {
 		eval := Evaluator{}
 		res, err := eval.Evaluate(prog)
 		if err != nil {
-			t.Fatalf(err.Error())
+			t.Fatalf("Test %d: %s", i, err.Error())
 		}
 		if res == nil {
 			t.Fatalf("Test %d: Could not evaluate", i)
@@ -62,5 +67,37 @@ func TestExprStmtEval(t *testing.T) {
 			t.Errorf("Test %d: Expected %s, got %s", i, test.Inspect, res.Inspect())
 		}
 	}
+}
 
+func TestIfExprEval(t *testing.T) {
+	input := "if (6 < 7) { return 5; } else { return \"hello\"; }"
+	expected := "5"
+	l := lexer.New(input)
+	p, err := parser.New(l)
+	if err != nil {
+		t.Fatalf("Error while beginning lexing")
+	}
+	prog := p.Parse()
+	if p.CheckErrors() != nil {
+		t.Errorf("Errors while parsing")
+		for _, err := range p.CheckErrors() {
+			t.Logf(err.Error())
+		}
+		t.Log("Aborting tests")
+		t.FailNow()
+	}
+	if prog == nil {
+		t.Fatalf("Program is nil")
+	}
+	eval := Evaluator{}
+	res, err := eval.Evaluate(prog)
+	if err != nil {
+		t.Fatalf("%s", err.Error())
+	}
+	if res == nil {
+		t.Fatalf("Could not evaluate program")
+	}
+	if res.Inspect() != expected {
+		t.Fatalf("Error: expected %s got %s", expected, res.Inspect())
+	}
 }

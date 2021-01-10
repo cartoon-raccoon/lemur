@@ -34,19 +34,19 @@ func New() *Evaluator {
 func (e *Evaluator) Evaluate(node ast.Node) (object.Object, error) {
 	switch node.(type) {
 	case *ast.Program:
-		ret := &object.StmtResults{}
-		ret.Results = []object.Object{}
+		res := &object.StmtResults{}
+		res.Results = []object.Object{}
 		for _, stmt := range node.(*ast.Program).Statements {
 			if ret, ok := stmt.(*ast.ReturnStatement); ok {
 				return e.Evaluate(ret)
 			}
-			res, err := e.Evaluate(stmt)
+			result, err := e.Evaluate(stmt)
 			if err != nil {
 				return NULL, err
 			}
-			ret.Results = append(ret.Results, res)
+			res.Results = append(res.Results, result)
 		}
-		return ret, nil
+		return res, nil
 	case ast.Statement:
 		stmt := node.(ast.Statement)
 		switch node.(ast.Statement).(type) {
@@ -63,22 +63,14 @@ func (e *Evaluator) Evaluate(node ast.Node) (object.Object, error) {
 			return e.Evaluate(expr.Expression)
 		case *ast.ReturnStatement:
 			retstmt := stmt.(*ast.ReturnStatement)
-			return e.Evaluate(retstmt.Value)
-		case *ast.BlockStatement:
-			ret := &object.StmtResults{}
-			ret.Results = []object.Object{}
-			blkstmt := stmt.(*ast.BlockStatement)
-			for _, stmt := range blkstmt.Statements {
-				if ret, ok := stmt.(*ast.ReturnStatement); ok {
-					return e.Evaluate(ret)
-				}
-				res, err := e.Evaluate(stmt)
-				if err != nil {
-					return NULL, err
-				}
-				ret.Results = append(ret.Results, res)
+			res, err := e.Evaluate(retstmt.Value)
+			if err != nil {
+				return NULL, err
 			}
-			return ret, nil
+			return &object.Return{Inner: res}, nil
+		case *ast.BlockStatement:
+			blkstmt := stmt.(*ast.BlockStatement)
+			return e.evalBlockStmt(blkstmt)
 		default:
 			return NULL, nil
 		}
@@ -118,7 +110,6 @@ func (e *Evaluator) Evaluate(node ast.Node) (object.Object, error) {
 				case *ast.IfExpression:
 					return e.Evaluate(ifexpr.Alternative.(*ast.IfExpression))
 				default:
-					//todo: throw error
 					return NULL, Err{"Invalid else branch", ifexpr.Alternative.Context()}
 				}
 			}
@@ -147,6 +138,39 @@ func (e *Evaluator) Evaluate(node ast.Node) (object.Object, error) {
 		return NULL, Err{"Unimplemented type", node.Context()}
 	}
 	return NULL, Err{"Evaluate: unreachable code", node.Context()}
+}
+
+func (e *Evaluator) evalProgram(prog *ast.Program) (object.Object, error) {
+	var result object.Object
+
+	for _, stmt := range prog.Statements {
+		result, err := e.Evaluate(stmt)
+		if err != nil {
+			return NULL, err
+		}
+
+		if returnVal, ok := result.(*object.Return); ok {
+			return returnVal.Inner, nil
+		}
+	}
+
+	return result, nil
+}
+
+func (e *Evaluator) evalBlockStmt(stmt *ast.BlockStatement) (object.Object, error) {
+	var result object.Object
+
+	for _, stmt := range stmt.Statements {
+		result, err := e.Evaluate(stmt)
+		if err != nil {
+			return NULL, err
+		}
+
+		if !object.IsNull(result) && result.Type() == object.RETURN {
+			return result, nil
+		}
+	}
+	return result, nil
 }
 
 // Err - Error returned by the evaluator

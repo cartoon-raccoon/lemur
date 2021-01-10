@@ -16,6 +16,8 @@ const (
 	BOOLEAN = "BOOL_OBJ"
 	//NULL - Null value
 	NULL = "NULL_OBJ"
+	//RETURN - Return value of a block
+	RETURN = "RETURN_OBJ"
 
 	//IDENT - Identifier
 	IDENT = "IDENT_OBJ"
@@ -117,6 +119,24 @@ func (n *Null) Inspect() string {
 // Display implements Object for Null
 func (n *Null) Display() {}
 
+// Return - A wrapper type for a value returned by a return statement
+type Return struct {
+	Inner Object
+}
+
+// Type implements Object for Return
+func (r *Return) Type() string { return RETURN }
+
+// Inspect implements Object for Return
+func (r *Return) Inspect() string {
+	return fmt.Sprintf("%s", r.Inner.Inspect())
+}
+
+// Display implements Object for Return
+func (r *Return) Display() {
+	r.Inner.Display()
+}
+
 // StmtResults is the results returned by a program
 type StmtResults struct {
 	Results []Object
@@ -129,7 +149,7 @@ func (pr *StmtResults) Type() string { return PRES }
 func (pr *StmtResults) Inspect() string {
 	pres := []string{}
 	for _, res := range pr.Results {
-		if !isNull(res) {
+		if !IsNull(res) {
 			pres = append(pres, res.Inspect())
 		}
 	}
@@ -144,7 +164,8 @@ func (pr *StmtResults) Display() {
 	}
 }
 
-func isNull(o Object) bool {
+// IsNull checks whether a result is Null
+func IsNull(o Object) bool {
 	switch o.(type) {
 	case *Null:
 		return true
