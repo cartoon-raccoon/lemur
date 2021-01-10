@@ -185,6 +185,35 @@ func (fc *FunctionCall) String() string {
 	return out.String()
 }
 
+//*----------| DotExpression |----------*/
+
+// DotExpression defines a dot expression [EXPR].[EXPR]
+type DotExpression struct {
+	Token lexer.Token
+	// Left can be any expression
+	Left Expression
+	// Right can only be a function call or a field
+	Right Expression
+}
+
+func (de *DotExpression) expressionNode() {}
+
+// TokenLiteral implements Node for DotExpression
+func (de *DotExpression) TokenLiteral() string {
+	return de.Token.Literal
+}
+
+// String implements Node for DotExpression
+func (de *DotExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(de.Left.String())
+	out.WriteString(".")
+	out.WriteString(de.Right.String())
+
+	return out.String()
+}
+
 //*----------| Literals |----------*/
 
 // Literal defines a literal in Monkey: string, int or float
@@ -267,7 +296,13 @@ func (s *Str) TokenLiteral() string {
 	return s.Token.Literal
 }
 func (s *Str) String() string {
-	return s.Inner
+	var out bytes.Buffer
+
+	out.WriteByte('"')
+	out.WriteString(s.Inner)
+	out.WriteByte('"')
+
+	return out.String()
 }
 
 func strFromLit(raw string) Literal {

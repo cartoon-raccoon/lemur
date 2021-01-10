@@ -698,7 +698,7 @@ func TestDotExprParsing(t *testing.T) {
 		Expected string
 	}{
 		{"thing.functioncall()", "thing.functioncall()"},
-		{"\"string\".join()", "\"string\".join()"},
+		{"\"string\".join", "\"string\".join"},
 	}
 
 	for i, test := range tests {
