@@ -2,6 +2,7 @@ package eval
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/cartoon-raccoon/monkey-jit/ast"
 	"github.com/cartoon-raccoon/monkey-jit/lexer"
@@ -20,6 +21,74 @@ var (
 // Evaluator epresents the program that walks the tree
 type Evaluator struct {
 	Ctxt lexer.Context
+}
+
+var builtins = map[string]*object.Builtin{
+	"len": {
+		Fn: func(ctxt lexer.Context, args ...object.Object) object.Object {
+			if len := len(args); len != 1 {
+				return &object.Exception{
+					Msg: fmt.Sprintf("Expected 1 argument, got %d", len),
+					Con: ctxt,
+				}
+			}
+			arg := args[0]
+			switch args[0].(type) {
+			//todo: add support for arrays
+			case *object.String:
+				str := arg.(*object.String)
+				return &object.Integer{Value: int64(len(str.Value))}
+			default:
+				return &object.Exception{
+					Msg: fmt.Sprintf("Cannot use type %T as argument for len()", arg),
+					Con: ctxt,
+				}
+			}
+		},
+	},
+	"print": {
+		Fn: func(ctxt lexer.Context, args ...object.Object) object.Object {
+			for _, arg := range args {
+				fmt.Print(arg.Inspect())
+				fmt.Print(" ")
+			}
+			fmt.Print("\n")
+			return NULL
+		},
+	},
+	"quit": { // for exiting normally
+		Fn: func(ctxt lexer.Context, args ...object.Object) object.Object {
+			if len := len(args); len != 0 {
+				return &object.Exception{
+					Msg: fmt.Sprintf(`Expected 0 arguments for quit(), got %d
+					Use exit() to exit with a status code`, len),
+					Con: ctxt,
+				}
+			}
+			os.Exit(0)
+			return NULL
+		},
+	},
+	"exit": { // for exiting with a code
+		Fn: func(ctxt lexer.Context, args ...object.Object) object.Object {
+			if len := len(args); len != 1 {
+				return &object.Exception{
+					Msg: fmt.Sprintf("Expected 1 argument for exit(), got %d", len),
+					Con: ctxt,
+				}
+			}
+			arg := args[0]
+			code, ok := arg.(*object.Integer)
+			if !ok {
+				return &object.Exception{
+					Msg: fmt.Sprintf("Cannot use %T as argument in exit()", code),
+					Con: ctxt,
+				}
+			}
+			os.Exit(int(code.Value))
+			return NULL
+		},
+	},
 }
 
 // New - returns a new evaluator
@@ -71,14 +140,16 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 		switch node.(ast.Expression).(type) {
 		case *ast.Identifier:
 			ident := expr.(*ast.Identifier)
-			data, ok := env.Data[ident.Value]
-			if !ok {
-				return &object.Exception{
-					Msg: "Variable not yet declared",
-					Con: ident.Context(),
-				}
+			if data, ok := env.Data[ident.Value]; ok {
+				return data
 			}
-			return data
+			if bltn, ok := builtins[ident.Value]; ok {
+				return bltn
+			}
+			return &object.Exception{
+				Msg: fmt.Sprintf("Could not find symbol %s", ident.Value),
+				Con: ident.Context(),
+			}
 		case *ast.PrefixExpr:
 			pexpr := expr.(*ast.PrefixExpr)
 			return e.evalPrefixExpr(pexpr, env)
@@ -214,6 +285,9 @@ func (e *Evaluator) applyFunction(
 ) object.Object {
 	function, ok := fn.(*object.Function)
 	if !ok {
+		if builtin, ok := fn.(*object.Builtin); ok {
+			return builtin.Fn(e.Ctxt, args...)
+		}
 		return &object.Exception{
 			Msg: "Not a function",
 			Con: e.Ctxt,

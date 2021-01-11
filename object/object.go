@@ -24,6 +24,8 @@ const (
 	RETURN = "RETURN_OBJ"
 	//FUNCTION - Function object
 	FUNCTION = "FUNC_OBJ"
+	//BUILTIN - Builtin function
+	BUILTIN = "BUILTIN_OBJ"
 
 	//ERROR - Error object
 	ERROR = "ERROR_OBJ"
@@ -232,6 +234,20 @@ func (f *Function) Inspect() string {
 func (f *Function) Display() {
 	fmt.Printf("%s\n", f.Inspect())
 }
+
+// BuiltinFn is a function that is implemented within the interpreter itself
+type BuiltinFn func(ctxt lexer.Context, args ...Object) Object
+
+type Builtin struct {
+	Fn BuiltinFn
+}
+
+func (b *Builtin) Type() string { return BUILTIN }
+func (b *Builtin) Inspect() string {
+	return "builtin function"
+}
+
+func (b *Builtin) Display() {}
 
 // StmtResults is the results returned by a program
 type StmtResults struct {
