@@ -386,3 +386,41 @@ func (b *Bool) String() string {
 func (b *Bool) Context() lexer.Context {
 	return b.Token.Pos
 }
+
+// Array represents an array literal
+type Array struct {
+	Token    lexer.Token
+	Elements []Expression
+}
+
+// Literal implements Literal for Array
+func (a *Array) Literal()        {}
+func (a *Array) expressionNode() {}
+
+// TokenLiteral implements Node for Array
+func (a *Array) TokenLiteral() string {
+	return a.Token.Literal
+}
+
+// String implements Node for Array
+func (a *Array) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("[")
+
+	elems := []string{}
+
+	for _, elem := range a.Elements {
+		elems = append(elems, elem.String())
+	}
+
+	out.WriteString(strings.Join(elems, ", "))
+	out.WriteString("]")
+
+	return out.String()
+}
+
+// Context implements Node for Array
+func (a *Array) Context() lexer.Context {
+	return a.Token.Pos
+}
