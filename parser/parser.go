@@ -46,6 +46,8 @@ const (
 	DOT
 	// CALL - a function call
 	CALL
+	// INDEX - an array or map index
+	INDEX
 )
 
 var precedences = map[string]int{
@@ -66,6 +68,7 @@ var precedences = map[string]int{
 	lexer.BSL:    BITWISE,
 	lexer.LOR:    LOGIC,
 	lexer.LAND:   LOGIC,
+	lexer.LSBRKT: INDEX,
 	lexer.DOT:    DOT,
 	lexer.LPAREN: CALL,
 }
@@ -125,6 +128,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerInfixFn(lexer.BWNOT, p.parseInfixExpr)
 	p.registerInfixFn(lexer.LAND, p.parseInfixExpr)
 	p.registerInfixFn(lexer.LOR, p.parseInfixExpr)
+	p.registerInfixFn(lexer.LSBRKT, p.parseIndexExpr)
 	p.registerInfixFn(lexer.LPAREN, p.parseFunctionCall)
 	p.registerInfixFn(lexer.DOT, p.parseDotExpression)
 

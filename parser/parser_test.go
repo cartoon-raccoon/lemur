@@ -359,81 +359,89 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{
+		{ //0
 			"1 + 1",
 			"(1 + 1)",
 		},
-		{
+		{ //1
 			"-a * b",
 			"((-a) * b)",
 		},
-		{
+		{ //2
 			"!-a",
 			"(!(-a))",
 		},
-		{
+		{ //3
 			"a + b + c",
 			"((a + b) + c)",
 		},
-		{
+		{ //4
 			"a + b - c",
 			"((a + b) - c)",
 		},
-		{
+		{ //5
 			"a * b * c",
 			"((a * b) * c)",
 		},
-		{
+		{ //6
 			"a * b / c",
 			"((a * b) / c)",
 		},
-		{
+		{ //7
 			"a + b / c",
 			"(a + (b / c))",
 		},
-		{
+		{ //8
 			"a + b * c + d / e - f",
 			"(((a + (b * c)) + (d / e)) - f)",
 		},
-		{
+		{ //9
 			"3 + 4; -5 * 5",
 			"(3 + 4)((-5) * 5)",
 		},
-		{
+		{ //10
 			"5 > 4 == 3 < 4",
 			"((5 > 4) == (3 < 4))",
 		},
-		{
+		{ //11
 			"5 < 4 != 3 > 4",
 			"((5 < 4) != (3 > 4))",
 		},
-		{
+		{ //12
 			"3 + 4 * 5 == 3 * 1 + 4 * 5",
 			"((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
 		},
-		{
+		{ //13
 			"3 + 4 * 5 || 3 * 1 + 4 * 5",
 			"((3 + ((4 * (5 || 3)) * 1)) + (4 * 5))",
 		},
-		{
+		{ //14
 			"1 + (2 + 3) + 4",
 			"((1 + (2 + 3)) + 4)",
 		},
-		{
+		{ //15
 			"(5 + 5) * 2",
 			"((5 + 5) * 2)",
 		},
-		{
+		{ //16
 			"2 / (5 + 5)",
 			"(2 / (5 + 5))",
 		},
-		{
+		{ //17
 			"-(5 + 5)",
 			"(-(5 + 5))",
 		},
-		{
+		{ //18
 			"!(true == true)",
 			"(!(true == true))",
+		},
+		{ //19
+			"a * [1, 2, 3, 4][b * c] * d",
+			"((a * ([1, 2, 3, 4][(b * c)])) * d)",
+		},
+		{ //20
+			"add(a * b[2], b[1], 2 * [1, 2][1])",
+			"add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
 		},
 	}
 	for i, tt := range tests {
@@ -447,12 +455,14 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			t.Errorf("Error while parsing program, checking for errors")
 		}
 		if p.checkErrors() != nil {
+			t.Errorf("Test %d errors:", i)
 			for _, err := range p.checkErrors() {
 				t.Logf(err.Error())
 			}
-			t.Fatalf("Aborting test")
+			//t.Fatalf("Aborting test")
+			continue
 		} else {
-			t.Logf("No errors found")
+			t.Logf("Test %d: No errors found", i)
 		}
 
 		expr, ok := prog.Statements[0].(*ast.ExprStatement)
@@ -699,6 +709,7 @@ func TestDotExprParsing(t *testing.T) {
 	}{
 		{"thing.functioncall()", "thing.functioncall()"},
 		{"\"string\".join", "\"string\".join"},
+		{"ass[3].hello()", "(ass[3]).hello()"},
 	}
 
 	for i, test := range tests {
@@ -718,6 +729,13 @@ func TestDotExprParsing(t *testing.T) {
 			}
 		case 1:
 			if p.current.Type != lexer.STRLIT && p.next.Type != lexer.DOT {
+				t.Errorf("Tokens not parsed correctly")
+				t.Logf("Current: %s", p.current.Type)
+				t.Logf("Next: %s", p.next.Type)
+				continue
+			}
+		case 2:
+			if p.current.Type != lexer.IDENT && p.next.Type != lexer.LSBRKT {
 				t.Errorf("Tokens not parsed correctly")
 				t.Logf("Current: %s", p.current.Type)
 				t.Logf("Next: %s", p.next.Type)

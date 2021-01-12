@@ -68,6 +68,27 @@ func (p *Parser) parseArrayLiteral() ast.Expression {
 	return lit
 }
 
+func (p *Parser) parseIndexExpr(left ast.Expression) ast.Expression {
+	lit := &ast.IndexExpr{Token: p.current}
+
+	p.advance()
+
+	lit.Left = left
+
+	lit.Index = p.parseExpression(LOWEST)
+
+	if !p.nextTokenIs(lexer.RSBRKT) {
+		p.errors = append(p.errors, Err{
+			Msg: fmt.Sprintf("Expected ], got %s", p.next.Literal),
+			Con: p.next.Pos,
+		})
+	}
+
+	p.advance()
+
+	return lit
+}
+
 func (p *Parser) parseGroupedExpr() ast.Expression {
 	p.advance()
 
