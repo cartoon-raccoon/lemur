@@ -5,6 +5,7 @@ Add support for hex and binary numlits
 Add infix parsing for op-assign operators
 Add more shell commands
 Add EOF checking to parser (if reached EOF in the middle of parsing, return error)
+Add range parsing: [INT..INT]
 
 //*--------------| GRAMMAR |--------------*/
 
