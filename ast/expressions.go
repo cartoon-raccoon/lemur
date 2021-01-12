@@ -2,6 +2,7 @@ package ast
 
 import (
 	"bytes"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -341,13 +342,7 @@ func (s *Str) TokenLiteral() string {
 	return s.Token.Literal
 }
 func (s *Str) String() string {
-	var out bytes.Buffer
-
-	out.WriteByte('"')
-	out.WriteString(s.Inner)
-	out.WriteByte('"')
-
-	return out.String()
+	return fmt.Sprintf(`"%s"`, s.Inner)
 }
 
 // Context implements Node for Str
@@ -423,4 +418,28 @@ func (a *Array) String() string {
 // Context implements Node for Array
 func (a *Array) Context() lexer.Context {
 	return a.Token.Pos
+}
+
+// IndexExpr represents an index into an array or a map
+type IndexExpr struct {
+	Token lexer.Token
+	Left  Expression
+	Index Expression
+}
+
+func (ie *IndexExpr) expressionNode() {}
+
+// TokenLiteral implements Node for IndexExpr
+func (ie *IndexExpr) TokenLiteral() string {
+	return ie.Token.Literal
+}
+
+// String implements Node for IndexExpr
+func (ie *IndexExpr) String() string {
+	return fmt.Sprintf("(%s[%s])", ie.Left.String(), ie.Index.String())
+}
+
+// Context implements Node for IndexExpr
+func (ie *IndexExpr) Context() lexer.Context {
+	return ie.Token.Pos
 }
