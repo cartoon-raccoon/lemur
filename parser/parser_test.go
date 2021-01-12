@@ -756,3 +756,57 @@ func TestDotExprParsing(t *testing.T) {
 		}
 	}
 }
+
+func TestArrayParsing(t *testing.T) {
+	tests := []struct {
+		Input    string
+		Expected string
+	}{
+		{
+			"[5, 4, 6.8, \"hello\", false]",
+			"[5, 4, 6.8, \"hello\", false]",
+		},
+		{
+			`["i'm cool", 4, 69, [56, 7], true]`,
+			`["i'm cool", 4, 69, [56, 7], true]`,
+		},
+		{
+			`[[5,6,8],[4,7,3],[3,7,8]]`,
+			`[[5, 6, 8], [4, 7, 3], [3, 7, 8]]`,
+		},
+	}
+
+	for i, test := range tests {
+		l := lexer.New(test.Input)
+		p, err := New(l)
+		if err != nil {
+			t.Errorf("Test %d: Error in lexing: %s", i, err)
+			continue
+		}
+		prog := p.Parse()
+		if p.checkErrors() != nil {
+			t.Errorf("Test %d: Errors encountered during parsing", i)
+			for _, err := range p.checkErrors() {
+				t.Log(err)
+			}
+			continue
+		}
+		if len := len(prog.Statements); len != 1 {
+			t.Errorf("Test %d: Expected 1 statement, got %d", i, len)
+			continue
+		}
+		expr, ok := prog.Statements[0].(*ast.ExprStatement)
+		if !ok {
+			t.Errorf("Test %d: Stmt is not exprstmt, got %T", i, prog.Statements[0])
+			continue
+		}
+		arr, ok := expr.Expression.(*ast.Array)
+		if !ok {
+			t.Errorf("Test %d: Expression is not an array", i)
+			continue
+		}
+		if str := arr.String(); str != test.Expected {
+			t.Errorf("Test strings do not match: expected %s, got %s", str, test.Expected)
+		}
+	}
+}
