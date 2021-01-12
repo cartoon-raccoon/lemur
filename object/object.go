@@ -20,6 +20,8 @@ const (
 	BOOLEAN = "BOOL_OBJ"
 	//ARRAY - Array
 	ARRAY = "ARR_OBJ"
+	//INDEX - Map or Array index
+	INDEX = "IDX_OBJ"
 	//NULL - Null value
 	NULL = "NULL_OBJ"
 	//RETURN - Return value of a block
@@ -200,6 +202,25 @@ func (a *Array) Inspect() string {
 // Display implements Object for Array
 func (a *Array) Display() {
 	fmt.Println(a.Inspect())
+}
+
+// Index represents an array or map index
+type Index struct {
+	Ident Object
+	Index Object
+}
+
+// Type implements Object for Index
+func (i *Index) Type() string { return INDEX }
+
+// Inspect implements Object for Index
+func (i *Index) Inspect() string {
+	return fmt.Sprintf("%s[%s]", i.Ident.Inspect(), i.Index.Inspect())
+}
+
+// Display implements Object for Index
+func (i *Index) Display() {
+	fmt.Println(i.Inspect())
 }
 
 // Null represents a null value

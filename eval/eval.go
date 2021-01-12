@@ -250,6 +250,10 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 
 			return arr
 
+		case *ast.IndexExpr:
+			idx := node.(ast.Expression).(*ast.IndexExpr)
+			return e.evalIndexExpr(idx, env)
+
 		default:
 			return NULL
 		}
@@ -359,4 +363,49 @@ func unwrapReturnValue(obj object.Object) object.Object {
 	}
 
 	return obj
+}
+
+func (e *Evaluator) evalIndexExpr(idx *ast.IndexExpr, env *object.Environment) object.Object {
+	left := e.Evaluate(idx.Left, env)
+	index := e.Evaluate(idx.Index, env)
+
+	switch left.(type) {
+	case *object.Array:
+		left := left.(*object.Array)
+		pos, ok := index.(*object.Integer)
+		if !ok {
+			return &object.Exception{
+				Msg: fmt.Sprintf("Cannot index into array with index of type %T", pos),
+				Con: idx.Context(),
+			}
+		}
+		if len := len(left.Elements); int(pos.Value) > len-1 {
+			return &object.Exception{
+				Msg: fmt.Sprintf("Cannot get index %d of array of length %d", pos.Value, len),
+				Con: idx.Context(),
+			}
+		}
+		return left.Elements[int(pos.Value)]
+	case *object.String:
+		left := left.(*object.String)
+		pos, ok := index.(*object.Integer)
+		if !ok {
+			return &object.Exception{
+				Msg: fmt.Sprintf("Cannot index into string with index of type %T", pos),
+				Con: idx.Context(),
+			}
+		}
+		if len := len(left.Value); int(pos.Value) > len-1 {
+			return &object.Exception{
+				Msg: fmt.Sprintf("Cannot get index %d of array of length %d", pos.Value, len),
+				Con: idx.Context(),
+			}
+		}
+		return &object.String{Value: string(left.Value[int(pos.Value)])}
+	default:
+		return &object.Exception{
+			Msg: fmt.Sprintf("Cannot use type %T as index", left),
+			Con: idx.Context(),
+		}
+	}
 }
