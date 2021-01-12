@@ -114,29 +114,37 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 			res.Results = append(res.Results, result)
 		}
 		return res
+
 	case ast.Statement:
 		stmt := node.(ast.Statement)
+
 		switch node.(ast.Statement).(type) {
 		case *ast.LetStatement:
 			letstmt := stmt.(*ast.LetStatement)
 			val := e.Evaluate(letstmt.Value, env)
 			env.Data[letstmt.Name.String()] = val
 			return NULL
+
 		case *ast.ExprStatement:
 			expr := stmt.(*ast.ExprStatement)
 			return e.Evaluate(expr.Expression, env)
+
 		case *ast.ReturnStatement:
 			retstmt := stmt.(*ast.ReturnStatement)
 			res := e.Evaluate(retstmt.Value, env)
 			return &object.Return{Inner: res}
+
 		case *ast.BlockStatement:
 			blkstmt := stmt.(*ast.BlockStatement)
 			return e.evalBlockStmt(blkstmt, env)
+
 		default:
 			return NULL
 		}
+
 	case ast.Expression:
 		expr := node.(ast.Expression)
+
 		switch node.(ast.Expression).(type) {
 		case *ast.Identifier:
 			ident := expr.(*ast.Identifier)
@@ -150,12 +158,15 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 				Msg: fmt.Sprintf("Could not find symbol %s", ident.Value),
 				Con: ident.Context(),
 			}
+
 		case *ast.PrefixExpr:
 			pexpr := expr.(*ast.PrefixExpr)
 			return e.evalPrefixExpr(pexpr, env)
+
 		case *ast.InfixExpr:
 			iexpr := expr.(*ast.InfixExpr)
 			return e.evalInfixExpr(iexpr, env)
+
 		case *ast.IfExpression:
 			ifexpr := expr.(*ast.IfExpression)
 			condition := e.Evaluate(ifexpr.Condition, env)
@@ -181,6 +192,7 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 					}
 				}
 			}
+
 		case *ast.FnLiteral:
 			fnlit := expr.(*ast.FnLiteral)
 			params := fnlit.Params
@@ -203,12 +215,14 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 			}
 
 			return e.applyFunction(function, args)
+
 		case *ast.DotExpression:
 			//todo
 			return &object.Exception{
 				Msg: "DotExpr: unimplemented",
 				Con: node.Context(),
 			}
+
 		case *ast.Int:
 			intexpr := node.(ast.Expression).(*ast.Int)
 			return &object.Integer{Value: intexpr.Inner}
@@ -221,6 +235,21 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 		case *ast.Bool:
 			boolexpr := node.(ast.Expression).(*ast.Bool)
 			return nativeBooltoObj(boolexpr.Inner)
+		case *ast.Array:
+			array := node.(ast.Expression).(*ast.Array)
+			arr := &object.Array{}
+
+			// preallocating so we don't have to waste cycles
+			// reallocating every time we append
+			elements := make([]object.Object, 0, len(array.Elements))
+
+			for _, elem := range array.Elements {
+				elements = append(elements, e.Evaluate(elem, env))
+			}
+			arr.Elements = elements
+
+			return arr
+
 		default:
 			return NULL
 		}

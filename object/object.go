@@ -18,6 +18,8 @@ const (
 	STRING = "STR_OBJ"
 	//BOOLEAN - Boolean
 	BOOLEAN = "BOOL_OBJ"
+	//ARRAY - Array
+	ARRAY = "ARR_OBJ"
 	//NULL - Null value
 	NULL = "NULL_OBJ"
 	//RETURN - Return value of a block
@@ -169,6 +171,37 @@ func (b *Boolean) Display() {
 	fmt.Printf("%t\n", b.Value)
 }
 
+// Array represents an array
+type Array struct {
+	Elements []Object
+}
+
+// Type implements Object for Array
+func (a *Array) Type() string { return ARRAY }
+
+// Inspect implements Object for Array
+func (a *Array) Inspect() string {
+	var out bytes.Buffer
+
+	out.WriteString("[")
+
+	elems := []string{}
+
+	for _, elem := range a.Elements {
+		elems = append(elems, elem.Inspect())
+	}
+
+	out.WriteString(strings.Join(elems, ", "))
+	out.WriteString("]")
+
+	return out.String()
+}
+
+// Display implements Object for Array
+func (a *Array) Display() {
+	fmt.Println(a.Inspect())
+}
+
 // Null represents a null value
 type Null struct{}
 
@@ -238,15 +271,20 @@ func (f *Function) Display() {
 // BuiltinFn is a function that is implemented within the interpreter itself
 type BuiltinFn func(ctxt lexer.Context, args ...Object) Object
 
+// Builtin - a builtin interpreter function
 type Builtin struct {
 	Fn BuiltinFn
 }
 
+// Type implements Object for Builtin
 func (b *Builtin) Type() string { return BUILTIN }
+
+// Inspect implements Object for Builtin
 func (b *Builtin) Inspect() string {
 	return "builtin function"
 }
 
+// Display implements Object for Builtin
 func (b *Builtin) Display() {}
 
 // StmtResults is the results returned by a program
