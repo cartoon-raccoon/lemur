@@ -99,6 +99,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerPrefixFn(lexer.STRLIT, p.parseStrLiteral)
 	p.registerPrefixFn(lexer.TRUE, p.parseBoolLiteral)
 	p.registerPrefixFn(lexer.FALSE, p.parseBoolLiteral)
+	p.registerPrefixFn(lexer.LSBRKT, p.parseArrayLiteral)
 	p.registerPrefixFn(lexer.BANG, p.parsePrefixExpr)
 	p.registerPrefixFn(lexer.SUB, p.parsePrefixExpr)
 	p.registerPrefixFn(lexer.LPAREN, p.parseGroupedExpr)

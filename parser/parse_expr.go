@@ -60,6 +60,14 @@ func (p *Parser) parseBoolLiteral() ast.Expression {
 	return lit
 }
 
+func (p *Parser) parseArrayLiteral() ast.Expression {
+	lit := &ast.Array{Token: p.current}
+
+	lit.Elements = p.parseExpressionList(lexer.RSBRKT)
+
+	return lit
+}
+
 func (p *Parser) parseGroupedExpr() ast.Expression {
 	p.advance()
 
@@ -243,7 +251,7 @@ func (p *Parser) parseFunctionParams() []*ast.Identifier {
 
 func (p *Parser) parseFunctionCall(fn ast.Expression) ast.Expression {
 	exp := &ast.FunctionCall{Token: p.current, Ident: fn}
-	exp.Params = p.parseCallArguments()
+	exp.Params = p.parseExpressionList(lexer.RPAREN)
 
 	if exp.Params == nil {
 		return nil
@@ -252,26 +260,26 @@ func (p *Parser) parseFunctionCall(fn ast.Expression) ast.Expression {
 	return exp
 }
 
-func (p *Parser) parseCallArguments() []ast.Expression {
-	args := []ast.Expression{}
+func (p *Parser) parseExpressionList(delim string) []ast.Expression {
+	elems := []ast.Expression{}
 
 	if p.nextTokenIs(lexer.RPAREN) {
 		p.advance()
-		return args
+		return elems
 	}
 
 	p.advance()
-	args = append(args, p.parseExpression(LOWEST))
+	elems = append(elems, p.parseExpression(LOWEST))
 
 	for p.nextTokenIs(lexer.COMMA) {
 		p.advance()
 		p.advance()
-		args = append(args, p.parseExpression(LOWEST))
+		elems = append(elems, p.parseExpression(LOWEST))
 	}
 
-	if !p.nextTokenIs(lexer.RPAREN) {
+	if !p.nextTokenIs(delim) {
 		p.errors = append(p.errors, Err{
-			Msg: fmt.Sprintf("ParseCallArgs: Expected `)`, got %s", p.next.Literal),
+			Msg: fmt.Sprintf("ParseCallArgs: Expected `%s`, got %s", delim, p.next.Literal),
 			Con: p.next.Pos,
 		})
 		return nil
@@ -279,7 +287,7 @@ func (p *Parser) parseCallArguments() []ast.Expression {
 
 	p.advance()
 
-	return args
+	return elems
 }
 
 func (p *Parser) parseDotExpression(left ast.Expression) ast.Expression {
