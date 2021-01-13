@@ -77,7 +77,7 @@ func (p *Parser) parseMapLiteral() ast.Expression {
 		return lit
 	}
 
-	if p.curTokenIs(lexer.LBRACE) {
+	if !p.curTokenIs(lexer.LBRACE) {
 		p.errors = append(p.errors, Err{
 			Msg: fmt.Sprintf("Expected {, got %s", p.current.Literal),
 			Con: p.current.Pos,
