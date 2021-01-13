@@ -68,6 +68,61 @@ func (p *Parser) parseArrayLiteral() ast.Expression {
 	return lit
 }
 
+func (p *Parser) parseMapLiteral() ast.Expression {
+	lit := &ast.Map{Token: p.current}
+	lit.Elements = make(map[ast.Expression]ast.Expression)
+
+	if p.nextTokenIs(lexer.RBRACE) {
+		p.advance()
+		return lit
+	}
+
+	if p.curTokenIs(lexer.LBRACE) {
+		p.errors = append(p.errors, Err{
+			Msg: fmt.Sprintf("Expected {, got %s", p.current.Literal),
+			Con: p.current.Pos,
+		})
+		return nil
+	}
+	for !p.nextTokenIs(lexer.RBRACE) {
+		p.advance()
+		idx := p.parseExpression(LOWEST)
+		if !p.nextTokenIs(lexer.COLON) {
+			p.errors = append(p.errors, Err{
+				Msg: fmt.Sprintf("Expected :, got %s", p.next.Literal),
+				Con: p.current.Pos,
+			})
+			return nil
+		}
+		p.advance() //current is now lexer.COLON
+		p.advance() //current is start of next expression
+		val := p.parseExpression(LOWEST)
+		lit.Elements[idx] = val
+
+		if !p.nextTokenIs(lexer.RBRACE) {
+			p.advance()
+			if p.curTokenIs(lexer.COMMA) {
+				continue
+			}
+			p.errors = append(p.errors, Err{
+				Msg: fmt.Sprintf("Expected comma, got %s", p.next.Literal),
+				Con: p.current.Pos,
+			})
+			return nil
+		}
+	}
+
+	if !p.nextTokenIs(lexer.RBRACE) {
+		p.errors = append(p.errors, Err{
+			Msg: fmt.Sprintf("Expected }, got %s", p.next.Literal),
+			Con: p.current.Pos,
+		})
+		return nil
+	}
+
+	return lit
+}
+
 func (p *Parser) parseIndexExpr(left ast.Expression) ast.Expression {
 	lit := &ast.IndexExpr{Token: p.current}
 

@@ -108,6 +108,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerPrefixFn(lexer.LPAREN, p.parseGroupedExpr)
 	p.registerPrefixFn(lexer.IF, p.parseIfExpression)
 	p.registerPrefixFn(lexer.FUNCTION, p.parseFnLiteral)
+	p.registerPrefixFn(lexer.LBRACE, p.parseMapLiteral)
 
 	// Registering infix parse functions
 	p.infixParseFns = make(map[string]infixParseFn)
