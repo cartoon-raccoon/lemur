@@ -420,6 +420,40 @@ func (a *Array) Context() lexer.Context {
 	return a.Token.Pos
 }
 
+// Map represents a map literal
+type Map struct {
+	Token    lexer.Token
+	Elements map[Expression]Expression
+}
+
+// Literal implements Literal for Map
+func (m *Map) Literal() {}
+
+func (m *Map) expressionNode() {}
+
+// TokenLiteral implements Node for Map
+func (m *Map) TokenLiteral() string {
+	return m.Token.Literal
+}
+
+// String implements Node for Map
+func (m *Map) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("{\n")
+	for idx, val := range m.Elements {
+		out.WriteString(fmt.Sprintf("%s : %s\n", idx.String(), val.String()))
+	}
+	out.WriteString("}\n")
+
+	return out.String()
+}
+
+// Context implements Node for Map
+func (m *Map) Context() lexer.Context {
+	return m.Token.Pos
+}
+
 // IndexExpr represents an index into an array or a map
 type IndexExpr struct {
 	Token lexer.Token
