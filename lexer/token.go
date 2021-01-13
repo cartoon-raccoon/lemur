@@ -102,6 +102,7 @@ const (
 
 	COMMA   = ","
 	SEMICOL = ";"
+	COLON   = ":"
 
 	LPAREN = "("
 	RPAREN = ")"

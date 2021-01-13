@@ -8,6 +8,7 @@ func TestNextToken(t *testing.T) {
 let ten = 10.0;
 fn hello() {
 	five = [5, 6.9, "hello", 10];
+	let map = { "hello" : 5, "bye" : 6 };
 	let sum = five + 10_000;
 }
 let str = "Hello i am\n cool\n";
@@ -54,6 +55,19 @@ if thou == 1_000.57 {
 		{COMMA, ","},
 		{INTLIT, "10"},
 		{RSBRKT, "]"},
+		{SEMICOL, ";"},
+		{LET, "let"},
+		{IDENT, "map"},
+		{ASSIGN, "="},
+		{LBRACE, "{"},
+		{STRLIT, "hello"},
+		{COLON, ":"},
+		{INTLIT, "5"},
+		{COMMA, ","},
+		{STRLIT, "bye"},
+		{COLON, ":"},
+		{INTLIT, "6"},
+		{RBRACE, "}"},
 		{SEMICOL, ";"},
 		{LET, "let"},
 		{IDENT, "sum"},

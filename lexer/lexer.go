@@ -159,6 +159,10 @@ func (l *Lexer) NextToken() (Token, error) {
 		l.nextChar()
 		return newToken(SEMICOL, SEMICOL, l.line, l.col, l.context), nil
 
+	case l.ch == ':':
+		l.nextChar()
+		return newToken(COLON, COLON, l.line, l.col, l.context), nil
+
 	case l.ch == '(':
 		l.nextChar()
 		return newToken(LPAREN, LPAREN, l.line, l.col, l.context), nil
