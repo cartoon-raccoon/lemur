@@ -24,6 +24,8 @@ type Evaluator struct {
 }
 
 var builtins = map[string]*object.Builtin{
+	// Gets the number of items in a collection
+	// Can be called on strings, arrays and maps.
 	"len": {
 		Fn: func(ctxt lexer.Context, args ...object.Object) object.Object {
 			if len := len(args); len != 1 {
@@ -34,16 +36,60 @@ var builtins = map[string]*object.Builtin{
 			}
 			arg := args[0]
 			switch args[0].(type) {
-			//todo: add support for arrays
 			case *object.String:
 				str := arg.(*object.String)
 				return &object.Integer{Value: int64(len(str.Value))}
+			case *object.Array:
+				arr := arg.(*object.Array)
+				return &object.Integer{Value: int64(len(arr.Elements))}
 			default:
 				return &object.Exception{
 					Msg: fmt.Sprintf("Cannot use type %T as argument for len()", arg),
 					Con: ctxt,
 				}
 			}
+		},
+	},
+	// Variadic, pushes all its arguments onto the first argument which must be a collection
+	// Can be called on arrays and maps
+	// When called on a map, the arguments must be array of length 2
+	//todo: change this to a method instead of a function once dot expressions are implemented
+	"push": {
+		Fn: func(ctxt lexer.Context, args ...object.Object) object.Object {
+			arr, ok := args[0].(*object.Array)
+			if !ok {
+				return &object.Exception{
+					Msg: fmt.Sprintf("Cannot push to type %T", args[0]),
+					Con: ctxt,
+				}
+			}
+			for _, elem := range args[1:] {
+				arr.Elements = append(arr.Elements, elem)
+			}
+			return arr
+		},
+	},
+	"first": {
+		Fn: func(ctxt lexer.Context, args ...object.Object) object.Object {
+			if len := len(args); len != 1 {
+				return &object.Exception{
+					Msg: fmt.Sprintf("Expected 1 argument for call to first(), got %d", len),
+					Con: ctxt,
+				}
+			}
+			arr, ok := args[0].(*object.Array)
+			if !ok {
+				return &object.Exception{
+					Msg: fmt.Sprintf("Cannot call first() on type %T", arr),
+					Con: ctxt,
+				}
+			}
+
+			if len(arr.Elements) < 1 {
+				return NULL
+			}
+
+			return arr.Elements[0]
 		},
 	},
 	"print": {
