@@ -284,7 +284,7 @@ func (p *Parser) parseFunctionCall(fn ast.Expression) ast.Expression {
 func (p *Parser) parseExpressionList(delim string) []ast.Expression {
 	elems := []ast.Expression{}
 
-	if p.nextTokenIs(lexer.RPAREN) {
+	if p.nextTokenIs(delim) {
 		p.advance()
 		return elems
 	}
@@ -294,6 +294,9 @@ func (p *Parser) parseExpressionList(delim string) []ast.Expression {
 
 	for p.nextTokenIs(lexer.COMMA) {
 		p.advance()
+		if p.nextTokenIs(delim) {
+			break
+		}
 		p.advance()
 		elems = append(elems, p.parseExpression(LOWEST))
 	}
