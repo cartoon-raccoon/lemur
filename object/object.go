@@ -3,6 +3,7 @@ package object
 import (
 	"bytes"
 	"fmt"
+	"hash/fnv"
 	"strings"
 
 	"github.com/cartoon-raccoon/monkey-jit/ast"
@@ -20,6 +21,8 @@ const (
 	BOOLEAN = "BOOL_OBJ"
 	//ARRAY - Array
 	ARRAY = "ARR_OBJ"
+	//MAP - Map
+	MAP = "MAP_OBJ"
 	//INDEX - Map or Array index
 	INDEX = "IDX_OBJ"
 	//NULL - Null value
@@ -202,6 +205,86 @@ func (a *Array) Inspect() string {
 // Display implements Object for Array
 func (a *Array) Display() {
 	fmt.Println(a.Inspect())
+}
+
+// Map represents a map in memory
+type Map struct {
+	Elements map[HashKey]Object
+}
+
+// Type implements Object for Map
+func (m *Map) Type() string { return MAP }
+
+// Inspect implements Object for Map
+func (m *Map) Inspect() string {
+	var out bytes.Buffer
+
+	out.WriteString("{\n")
+	for idx, val := range m.Elements {
+		out.WriteString(fmt.Sprintf("%T : %s,\n", idx, val.Inspect()))
+	}
+	out.WriteString("}")
+
+	return out.String()
+}
+
+// Display implements Object for Map
+func (m *Map) Display() {
+	fmt.Println(m.Inspect())
+}
+
+// Hashable defines whether a type can be used as a key in a Map
+type Hashable interface {
+	HashKey() HashKey
+}
+
+// HashKey defines the key used in the Map
+type HashKey struct {
+	Type  string
+	Value uint64
+}
+
+// HashKey (boolean) implements Hashable for Boolean
+func (b *Boolean) HashKey() HashKey {
+	var value uint64
+
+	if b.Value {
+		value = 1
+	} else {
+		value = 0
+	}
+
+	return HashKey{
+		Type:  b.Type(),
+		Value: value,
+	}
+}
+
+// HashKey (integer) implements Hashable for Integer
+func (i *Integer) HashKey() HashKey {
+	return HashKey{
+		Type:  i.Type(),
+		Value: uint64(i.Value),
+	}
+}
+
+//! Hashable cannot be implemented for floats or composite types like map or arrays
+// func (f *Float) HashKey() HashKey {
+// 	hasher := fnv.New64a
+
+// 	hasher.Write([]byte(f.Value))
+
+// }
+
+// HashKey implements Hashable for String
+func (s *String) HashKey() HashKey {
+	hasher := fnv.New64a()
+	hasher.Write([]byte(s.Value))
+
+	return HashKey{
+		Type:  s.Type(),
+		Value: hasher.Sum64(),
+	}
 }
 
 // Index represents an array or map index

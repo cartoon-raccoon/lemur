@@ -296,6 +296,38 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 
 			return arr
 
+		case *ast.Map:
+			hash := node.(ast.Expression).(*ast.Map)
+			newmap := &object.Map{}
+			newmap.Elements = make(map[object.HashKey]object.Object)
+
+			for key, val := range hash.Elements {
+				nkey, nval := e.Evaluate(key, env), e.Evaluate(val, env)
+
+				nkey.Display()
+				nval.Display()
+
+				if object.IsErr(nkey) {
+					return nkey
+				}
+				if object.IsErr(nval) {
+					return nval
+				}
+
+				hashable, ok := nkey.(object.Hashable)
+
+				if !ok {
+					return &object.Exception{
+						Msg: fmt.Sprintf("Cannot use type %T as key for Map", nkey),
+						Con: hash.Context(),
+					}
+				}
+
+				newmap.Elements[hashable.HashKey()] = nval
+			}
+
+			return newmap
+
 		case *ast.IndexExpr:
 			idx := node.(ast.Expression).(*ast.IndexExpr)
 			return e.evalIndexExpr(idx, env)
@@ -432,6 +464,7 @@ func (e *Evaluator) evalIndexExpr(idx *ast.IndexExpr, env *object.Environment) o
 			}
 		}
 		return left.Elements[int(pos.Value)]
+
 	case *object.String:
 		left := left.(*object.String)
 		pos, ok := index.(*object.Integer)
@@ -448,6 +481,23 @@ func (e *Evaluator) evalIndexExpr(idx *ast.IndexExpr, env *object.Environment) o
 			}
 		}
 		return &object.String{Value: string(left.Value[int(pos.Value)])}
+
+	case *object.Map:
+		left := left.(*object.Map)
+
+		hashable, ok := index.(object.Hashable)
+		if !ok {
+			return &object.Exception{
+				Msg: fmt.Sprintf("Cannot use type %T as key for Map", index),
+				Con: idx.Index.Context(),
+			}
+		}
+		ret, ok := left.Elements[hashable.HashKey()]
+		if !ok {
+			return NULL
+		}
+		return ret
+
 	default:
 		return &object.Exception{
 			Msg: fmt.Sprintf("Cannot use type %T as index", left),
