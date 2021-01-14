@@ -828,3 +828,52 @@ func TestArrayParsing(t *testing.T) {
 		}
 	}
 }
+
+func TestMapParsing(t *testing.T) {
+	tests := []struct {
+		Input    string
+		Expected string
+	}{
+		{
+			"{ 5 : 2 + 3, \"hello\" : \"goodbye\" }",
+			"{\n5 : (2 + 3),\n\"hello\" : \"goodbye\",\n}",
+		},
+	}
+
+	l := lexer.New(tests[0].Input)
+	p, err := New(l)
+
+	if err != nil {
+		t.Fatalf("Error in parsing: %s", err)
+	}
+
+	prog := p.Parse()
+
+	if p.CheckErrors() != nil {
+		t.Errorf("Errors occurred during parsing")
+		for _, e := range p.checkErrors() {
+			t.Logf("%s", e)
+		}
+		t.FailNow()
+	}
+
+	if len := len(prog.Statements); len != 1 {
+		t.Fatalf("Wrong number of statements: Expected 1, got %d", len)
+	}
+
+	expr, ok := prog.Statements[0].(*ast.ExprStatement)
+
+	if !ok {
+		t.Fatalf("Statement is not expr statement, got %T", prog.Statements[0])
+	}
+
+	hash, ok := expr.Expression.(*ast.Map)
+
+	if !ok {
+		t.Fatalf("Expression is not map, got %T", hash)
+	}
+
+	if hash.String() != tests[0].Expected {
+		t.Fatalf("Strings do not match: expected %s, got %s", hash.String(), tests[0].Expected)
+	}
+}

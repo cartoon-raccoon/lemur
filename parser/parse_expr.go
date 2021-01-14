@@ -120,6 +120,8 @@ func (p *Parser) parseMapLiteral() ast.Expression {
 		return nil
 	}
 
+	p.advance()
+
 	return lit
 }
 
