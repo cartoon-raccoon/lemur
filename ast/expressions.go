@@ -442,9 +442,9 @@ func (m *Map) String() string {
 
 	out.WriteString("{\n")
 	for idx, val := range m.Elements {
-		out.WriteString(fmt.Sprintf("%s : %s\n", idx.String(), val.String()))
+		out.WriteString(fmt.Sprintf("%s : %s,\n", idx.String(), val.String()))
 	}
-	out.WriteString("}\n")
+	out.WriteString("}")
 
 	return out.String()
 }
