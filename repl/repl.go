@@ -15,7 +15,12 @@ import (
 )
 
 // PROMPT - the prompt that the user sees
-const PROMPT = ">>> "
+const PROMPT = "mkrepl >> "
+
+// CONT - When a construct is incomplete
+const CONT = "> "
+
+var nestingLevel = 0
 
 // Repl - the interative Monkey shell
 type Repl struct {
@@ -40,13 +45,27 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 	evaluator := eval.New()
 
 	for {
-		fmt.Printf(PROMPT)
-		scanned := scanner.Scan()
-		if !scanned {
-			return
+		prompt := PROMPT
+		var line string
+		fmt.Printf(prompt)
+
+		for {
+			scanned := scanner.Scan()
+			if !scanned {
+				return
+			}
+
+			line += scanner.Text()
+
+			if isComplete(line) {
+				break
+			} else {
+				nestingLevel = 0
+				prompt = CONT
+				fmt.Printf(prompt)
+			}
 		}
 
-		line := scanner.Text()
 		if strings.HasPrefix(line, ":") {
 			if fn, ok := Commands[line[1:]]; ok {
 				fn()
@@ -55,6 +74,7 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 			}
 			continue
 		}
+
 		l := lexer.New(line)
 		// for tok, err := l.NextToken(); tok.Type != lexer.EOF; tok, err = l.NextToken() {
 		// 	if err != nil {
@@ -84,5 +104,26 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 		obj.Display()
 
 	}
+}
 
+// todo: add a stack to track whether the matching bracket is correct
+func isComplete(input string) bool {
+	for _, char := range input {
+		switch char {
+		case '[':
+			nestingLevel++
+		case '{':
+			nestingLevel++
+		case ']':
+			nestingLevel--
+		case '}':
+			nestingLevel--
+		}
+	}
+
+	if nestingLevel != 0 {
+		return false
+	}
+
+	return true
 }
