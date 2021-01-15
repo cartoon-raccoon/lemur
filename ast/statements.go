@@ -129,3 +129,33 @@ func (bs *BlockStatement) String() string {
 func (bs *BlockStatement) Context() lexer.Context {
 	return bs.Token.Pos
 }
+
+// WhileStatement represents a while loop
+type WhileStatement struct {
+	Token     lexer.Token
+	Condition Expression
+	Body      *BlockStatement
+}
+
+func (ws *WhileStatement) statementNode() {}
+
+// TokenLiteral implements Node for WhileStatement
+func (ws *WhileStatement) TokenLiteral() string {
+	return ws.Token.Literal
+}
+
+// String implements Node for WhileStatement
+func (ws *WhileStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("while ")
+	out.WriteString(ws.Condition.String())
+	out.WriteString(ws.Body.String())
+
+	return out.String()
+}
+
+// Context implements Node for WhileStatement
+func (ws *WhileStatement) Context() lexer.Context {
+	return ws.Token.Pos
+}
