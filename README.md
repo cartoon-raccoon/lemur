@@ -1,5 +1,5 @@
-# monkey-jit
-A JIT implementation of the Monkey programming language
+# lemur
+A JIT implementation of the Lemur programming language
 
 Based off the Monkey programming language developed by Thorsten Ball for his book [Writing an Interpreter in Go](https://interpreterbook.com).
 
@@ -9,6 +9,7 @@ The language itself is also extremely limited. Ball only implements if statement
 This would probably be good enough for a simple scripting language, but I plan to add my own other items to it, such as:
 
 - Import statements (for multi-file projects)
+- For and while loops (inexplicably not included in Monkey)
 - Classes / Structs (for clustered data and binding methods to them)
 - Method calls for classes
 - Traits / Interfaces (can be used for operator overloading)

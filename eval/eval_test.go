@@ -3,9 +3,9 @@ package eval
 import (
 	"testing"
 
-	"github.com/cartoon-raccoon/monkey-jit/lexer"
-	"github.com/cartoon-raccoon/monkey-jit/object"
-	"github.com/cartoon-raccoon/monkey-jit/parser"
+	"github.com/cartoon-raccoon/lemur/lexer"
+	"github.com/cartoon-raccoon/lemur/object"
+	"github.com/cartoon-raccoon/lemur/parser"
 )
 
 func TestExprStmtEval(t *testing.T) {

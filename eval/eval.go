@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cartoon-raccoon/monkey-jit/ast"
-	"github.com/cartoon-raccoon/monkey-jit/lexer"
-	"github.com/cartoon-raccoon/monkey-jit/object"
+	"github.com/cartoon-raccoon/lemur/ast"
+	"github.com/cartoon-raccoon/lemur/lexer"
+	"github.com/cartoon-raccoon/lemur/object"
 )
 
 var (

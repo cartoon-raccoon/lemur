@@ -1,3 +1,4 @@
-module github.com/cartoon-raccoon/monkey-jit
+module github.com/cartoon-raccoon/lemur
 
 go 1.15
+

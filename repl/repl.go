@@ -8,14 +8,14 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/cartoon-raccoon/monkey-jit/eval"
-	"github.com/cartoon-raccoon/monkey-jit/lexer"
-	"github.com/cartoon-raccoon/monkey-jit/object"
-	"github.com/cartoon-raccoon/monkey-jit/parser"
+	"github.com/cartoon-raccoon/lemur/eval"
+	"github.com/cartoon-raccoon/lemur/lexer"
+	"github.com/cartoon-raccoon/lemur/object"
+	"github.com/cartoon-raccoon/lemur/parser"
 )
 
 // PROMPT - the prompt that the user sees
-const PROMPT = "mkrepl >> "
+const PROMPT = "lemur >> "
 
 // CONT - When a construct is incomplete
 const CONT = "> "
@@ -37,7 +37,7 @@ func New() *Repl {
 func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 
-	fmt.Printf("Monkey Interactive Shell v0.1\n")
+	fmt.Printf("Lemur Interactive Shell v0.1\n")
 	fmt.Printf("running on (%s %s)\n", runtime.GOOS, runtime.GOARCH)
 	fmt.Printf("Welcome, %s\n", username)
 

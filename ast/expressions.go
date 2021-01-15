@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cartoon-raccoon/monkey-jit/lexer"
+	"github.com/cartoon-raccoon/lemur/lexer"
 )
 
 //*----------| Identifier |----------*/

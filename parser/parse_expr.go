@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/cartoon-raccoon/monkey-jit/ast"
-	"github.com/cartoon-raccoon/monkey-jit/lexer"
+	"github.com/cartoon-raccoon/lemur/ast"
+	"github.com/cartoon-raccoon/lemur/lexer"
 )
 
 func (p *Parser) parseIdentifier() ast.Expression {

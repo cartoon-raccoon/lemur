@@ -4,7 +4,7 @@ import (
 	"os"
 	"os/user"
 
-	"github.com/cartoon-raccoon/monkey-jit/repl"
+	"github.com/cartoon-raccoon/lemur/repl"
 )
 
 func main() {

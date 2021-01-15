@@ -3,7 +3,7 @@ package ast
 import (
 	"bytes"
 
-	"github.com/cartoon-raccoon/monkey-jit/lexer"
+	"github.com/cartoon-raccoon/lemur/lexer"
 )
 
 // LetStatement - represents a let statement in the AST

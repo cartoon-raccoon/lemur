@@ -3,9 +3,9 @@ package eval
 import (
 	"fmt"
 
-	"github.com/cartoon-raccoon/monkey-jit/ast"
-	"github.com/cartoon-raccoon/monkey-jit/lexer"
-	"github.com/cartoon-raccoon/monkey-jit/object"
+	"github.com/cartoon-raccoon/lemur/ast"
+	"github.com/cartoon-raccoon/lemur/lexer"
+	"github.com/cartoon-raccoon/lemur/object"
 )
 
 func (e *Evaluator) evalPrefixExpr(expr *ast.PrefixExpr, env *object.Environment) object.Object {
