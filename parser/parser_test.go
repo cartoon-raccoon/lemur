@@ -932,3 +932,45 @@ func TestFuncDeclParsing(t *testing.T) {
 
 	t.Logf("All tests passed successfully")
 }
+
+func TestWhileStmtParsing(t *testing.T) {
+	input := `while (i >= 4) {
+		let j = j + 1;
+	}`
+
+	l := lexer.New(input)
+	p, err := New(l)
+
+	if err != nil {
+		t.Fatalf("Got errors during parsing: %s", err)
+	}
+
+	prog := p.Parse()
+
+	if prog == nil {
+		t.Errorf("Could not parse program")
+	}
+	if errors := p.checkErrors(); errors != nil {
+		t.Errorf("Errors during parsing:")
+		for _, err := range errors {
+			t.Logf("%s", err)
+		}
+		t.FailNow()
+	}
+
+	if prog == nil {
+		t.FailNow()
+	}
+
+	if lenstmt := len(prog.Statements); lenstmt != 1 {
+		t.Fatalf("Expected 0 statements, got %d", lenstmt)
+	}
+
+	while, ok := prog.Statements[0].(*ast.WhileStatement)
+	if !ok {
+		t.Fatalf("Is not while statement, got %T", prog.Statements[0])
+	}
+
+	t.Logf(while.String())
+
+}
