@@ -10,17 +10,14 @@ import (
 func (p *Parser) parseFuncDecl() ast.Declaration {
 	fndecl := &ast.FunctionDecl{Token: p.current}
 	p.advance()
-	expr := p.parseExpression(LOWEST)
-
-	ident, ok := expr.(*ast.Identifier)
-	if !ok {
+	if !p.curTokenIs(lexer.IDENT) {
 		p.errors = append(p.errors, &Err{
-			Msg: fmt.Sprintf("Expected identifier, got %s", p.current.Type),
+			Msg: fmt.Sprintf("Expected identifier, got %s", p.current.Literal),
 			Con: p.current.Pos,
 		})
 		return nil
 	}
-	fndecl.Name = ident
+	fndecl.Name = p.parseIdentifier().(*ast.Identifier)
 
 	p.advance()
 	if !p.curTokenIs(lexer.LPAREN) {

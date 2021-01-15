@@ -178,6 +178,9 @@ func (p *Parser) parseNode() ast.Node {
 	case lexer.RETURN:
 		return p.parseReturnStatement()
 	case lexer.FUNCTION:
+		if p.nextTokenIs(lexer.LPAREN) {
+			return p.parseExprStatement()
+		}
 		return p.parseFuncDecl()
 	default:
 		return p.parseExprStatement()
