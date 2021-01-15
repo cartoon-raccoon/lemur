@@ -197,6 +197,24 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 			res := e.Evaluate(retstmt.Value, env)
 			return &object.Return{Inner: res}
 
+		case *ast.WhileStatement:
+			whilestmt := stmt.(*ast.WhileStatement)
+
+			var result object.Object
+
+			for {
+				val := e.Evaluate(whilestmt.Condition, env)
+				if !evaluateTruthiness(val) {
+					break
+				}
+				result = e.evalBlockStmt(whilestmt.Body, env)
+				if object.IsErr(result) {
+					return result
+				}
+			}
+
+			return result
+
 		case *ast.BlockStatement:
 			blkstmt := stmt.(*ast.BlockStatement)
 			return e.evalBlockStmt(blkstmt, env)
