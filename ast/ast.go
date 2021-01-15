@@ -73,7 +73,7 @@ func (p *Program) Context() lexer.Context {
 // FunctionDecl represents a function declaration
 type FunctionDecl struct {
 	Token  lexer.Token
-	Name   string
+	Name   *Identifier
 	Params []*Identifier
 	Body   *BlockStatement
 }
@@ -95,7 +95,7 @@ func (fd *FunctionDecl) String() string {
 		params = append(params, p.String())
 	}
 	out.WriteString("fn ")
-	out.WriteString(fd.Name)
+	out.WriteString(fd.String())
 	out.WriteString("(")
 	out.WriteString(strings.Join(params, ", "))
 	out.WriteString(")")
