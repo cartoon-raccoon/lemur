@@ -152,6 +152,8 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 	case *ast.Program:
 		res := &object.StmtResults{}
 		res.Results = []object.Object{}
+
+		// adding statements
 		for _, stmt := range node.(*ast.Program).Statements {
 			if ret, ok := stmt.(*ast.ReturnStatement); ok {
 				return e.Evaluate(ret, env)
@@ -159,6 +161,21 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 			result := e.Evaluate(stmt, env)
 			res.Results = append(res.Results, result)
 		}
+
+		// adding functions
+		//todo: this should function differently than closures
+		for _, fn := range node.(*ast.Program).Functions {
+			body := fn.Body
+			params := fn.Params
+			env.Data[fn.Name.Value] = &object.Function{
+				Params: params,
+				Body:   body,
+				Env:    env,
+			}
+		}
+
+		//todo: adding classes
+
 		return res
 
 	case ast.Statement:
@@ -303,9 +320,6 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 
 			for key, val := range hash.Elements {
 				nkey, nval := e.Evaluate(key, env), e.Evaluate(val, env)
-
-				nkey.Display()
-				nval.Display()
 
 				if object.IsErr(nkey) {
 					return nkey
