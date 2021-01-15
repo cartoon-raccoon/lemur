@@ -45,7 +45,7 @@ type Declaration interface {
 // Program represents the entire parsed program
 type Program struct {
 	Statements []Statement
-	Functions  []FunctionDecl
+	Functions  []*FunctionDecl
 }
 
 // TokenLiteral implements Node for string

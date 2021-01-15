@@ -278,6 +278,9 @@ func (p *Parser) parseFnLiteral() ast.Expression {
 	// p.current is now lparen
 
 	lit.Params = p.parseFunctionParams()
+	if lit.Params == nil {
+		return nil
+	}
 	// p.next is now rparen
 
 	p.advance()
@@ -289,6 +292,12 @@ func (p *Parser) parseFnLiteral() ast.Expression {
 			return nil
 		}
 		lit.Body = body
+	} else {
+		p.errors = append(p.errors, &Err{
+			Msg: fmt.Sprintf("Expected block, got %s", p.next.Literal),
+			Con: p.next.Pos,
+		})
+		return nil
 	}
 
 	return lit

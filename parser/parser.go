@@ -140,6 +140,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 func (p *Parser) Parse() *ast.Program {
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
+	program.Functions = []*ast.FunctionDecl{}
 
 	for !p.curTokenIs(lexer.EOF) {
 		node := p.parseNode()
@@ -152,7 +153,7 @@ func (p *Parser) Parse() *ast.Program {
 		case ast.Declaration:
 			switch node.(ast.Declaration).(type) {
 			case *ast.FunctionDecl:
-				program.Functions = append(program.Functions, *node.(ast.Declaration).(*ast.FunctionDecl))
+				program.Functions = append(program.Functions, node.(ast.Declaration).(*ast.FunctionDecl))
 			default:
 				//todo: return err
 				//! this is a fatal error and should panic
@@ -176,6 +177,8 @@ func (p *Parser) parseNode() ast.Node {
 		return p.parseLetStatement()
 	case lexer.RETURN:
 		return p.parseReturnStatement()
+	case lexer.FUNCTION:
+		return p.parseFuncDecl()
 	default:
 		return p.parseExprStatement()
 	}
