@@ -104,3 +104,34 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 
 	return block
 }
+
+func (p *Parser) parseWhileStatement() *ast.WhileStatement {
+	while := &ast.WhileStatement{Token: p.current}
+
+	p.advance()
+
+	if !p.curTokenIs(lexer.LPAREN) {
+		p.errors = append(p.errors, &Err{
+			Msg: fmt.Sprintf("Expected `(`, got %s", p.current.Literal),
+			Con: p.current.Pos,
+		})
+	}
+
+	while.Condition = p.parseExpression(LOWEST)
+
+	if !p.nextTokenIs(lexer.LBRACE) {
+		p.errors = append(p.errors, &Err{
+			Msg: fmt.Sprintf("Expected `{`, got %s", p.next.Literal),
+			Con: p.next.Pos,
+		})
+	}
+
+	p.advance()
+
+	while.Body = p.parseBlockStatement()
+	if while.Body == nil {
+		return nil
+	}
+
+	return while
+}
