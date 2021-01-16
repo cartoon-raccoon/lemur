@@ -52,6 +52,13 @@ func (e *Evaluator) evalInfixExpr(expr *ast.InfixExpr, env *object.Environment) 
 		return &object.Exception{Msg: "Could not evaluate RHS", Con: expr.Context()}
 	}
 
+	if object.IsErr(left) {
+		return left
+	}
+	if object.IsErr(right) {
+		return right
+	}
+
 	if isComparisonOp(expr.Operator) {
 		return e.evaluateComp(left, right, expr.Operator, expr.Context())
 	}
