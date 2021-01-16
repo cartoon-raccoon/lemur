@@ -185,7 +185,7 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 		case *ast.LetStatement:
 			letstmt := stmt.(*ast.LetStatement)
 			val := e.Evaluate(letstmt.Value, env)
-			env.Data[letstmt.Name.String()] = val
+			env.Set(letstmt.Name.Value, val)
 			return NULL
 
 		case *ast.ExprStatement:
@@ -229,7 +229,7 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 		switch node.(ast.Expression).(type) {
 		case *ast.Identifier:
 			ident := expr.(*ast.Identifier)
-			if data, ok := env.Data[ident.Value]; ok {
+			if data, ok := env.Get(ident.Value); ok {
 				return data
 			}
 			if bltn, ok := builtins[ident.Value]; ok {
