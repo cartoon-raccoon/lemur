@@ -29,6 +29,8 @@ const (
 	NULL = "NULL_OBJ"
 	//RETURN - Return value of a block
 	RETURN = "RETURN_OBJ"
+	//BREAK - A break value
+	BREAK = "BRK_OBJ"
 	//FUNCTION - Function object
 	FUNCTION = "FUNC_OBJ"
 	//BUILTIN - Builtin function
@@ -338,6 +340,22 @@ func (r *Return) Display() {
 	r.Inner.Display()
 }
 
+//Break represents a break statement
+type Break struct{}
+
+//Type implements Object for Break
+func (b *Break) Type() string { return BREAK }
+
+//Inspect implements Object for Break
+func (b *Break) Inspect() string {
+	return "break"
+}
+
+//Display implements Object for Break
+func (b *Break) Display() {
+	fmt.Println(b.Inspect())
+}
+
 // Function represents a function in the environment
 type Function struct {
 	Params []*ast.Identifier
@@ -451,6 +469,16 @@ func IsNull(o Object) bool {
 func IsErr(o Object) bool {
 	switch o.(type) {
 	case *Exception:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsBreak checks whether a result is Break
+func IsBreak(o Object) bool {
+	switch o.(type) {
+	case *Break:
 		return true
 	default:
 		return false

@@ -20,7 +20,8 @@ var (
 
 // Evaluator epresents the program that walks the tree
 type Evaluator struct {
-	Ctxt lexer.Context
+	Ctxt   lexer.Context
+	InLoop bool
 }
 
 var builtins = map[string]*object.Builtin{
@@ -140,7 +141,8 @@ var builtins = map[string]*object.Builtin{
 // New - returns a new evaluator
 func New() *Evaluator {
 	eval := &Evaluator{
-		Ctxt: lexer.Context{Line: 1, Col: 1, Ctxt: ""},
+		Ctxt:   lexer.Context{Line: 1, Col: 1, Ctxt: ""},
+		InLoop: false,
 	}
 	return eval
 }
@@ -198,6 +200,7 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 			return &object.Return{Inner: res}
 
 		case *ast.WhileStatement:
+			e.InLoop = true
 			whilestmt := stmt.(*ast.WhileStatement)
 
 			var result object.Object
@@ -208,12 +211,26 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 					break
 				}
 				result = e.evalBlockStmt(whilestmt.Body, env)
-				if object.IsErr(result) {
+				if object.IsErr(result) || object.IsBreak(result) {
+					if object.IsBreak(result) {
+						e.InLoop = false
+						return NULL
+					}
 					return result
 				}
 			}
 
+			e.InLoop = false
 			return result
+
+		case *ast.BreakStatement:
+			if !e.InLoop {
+				return &object.Exception{
+					Msg: "Cannot use break outside of loop",
+					Con: node.(ast.Statement).Context(),
+				}
+			}
+			return &object.Break{}
 
 		case *ast.BlockStatement:
 			blkstmt := stmt.(*ast.BlockStatement)
@@ -398,7 +415,7 @@ func (e *Evaluator) evalBlockStmt(stmt *ast.BlockStatement, env *object.Environm
 
 	for _, stmt := range stmt.Statements {
 		result = e.Evaluate(stmt, env)
-		if !object.IsNull(result) && result.Type() == object.RETURN {
+		if !object.IsNull(result) && result.Type() == object.RETURN || object.IsBreak(result) {
 			return result
 		}
 	}
