@@ -157,9 +157,14 @@ func (e *Evaluator) evaluateSides(left, right object.Object, op string, con lexe
 			Msg: "LHS is null",
 			Con: con,
 		}
+	case *object.Exception:
+		return left
 	default:
+		if object.IsErr(right) {
+			return right
+		}
 		return &object.Exception{
-			Msg: "e.evaluateSides: Unreacheable",
+			Msg: fmt.Sprintf("e.evaluateSides: Unreachable - %s", left),
 			Con: con,
 		}
 	}

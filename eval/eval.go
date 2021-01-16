@@ -402,6 +402,9 @@ func (e *Evaluator) evalBlockStmt(stmt *ast.BlockStatement, env *object.Environm
 			return result
 		}
 	}
+	if result == nil {
+		return NULL
+	}
 	return result
 }
 
