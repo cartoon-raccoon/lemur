@@ -55,7 +55,7 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 				return
 			}
 
-			line += scanner.Text()
+			line += scanner.Text() + "\n"
 
 			if isComplete(line) {
 				break
@@ -67,7 +67,7 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 		}
 
 		if strings.HasPrefix(line, ":") {
-			if fn, ok := Commands[line[1:]]; ok {
+			if fn, ok := Commands[strings.TrimSpace(line[1:])]; ok {
 				fn()
 			} else {
 				fmt.Printf("No command `%s` found\n", line[1:])
