@@ -135,3 +135,7 @@ func (p *Parser) parseWhileStatement() *ast.WhileStatement {
 
 	return while
 }
+
+func (p *Parser) parseBreakStatement() *ast.BreakStatement {
+	return &ast.BreakStatement{Token: p.current}
+}

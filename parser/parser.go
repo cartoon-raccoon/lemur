@@ -179,6 +179,8 @@ func (p *Parser) parseNode() ast.Node {
 		return p.parseReturnStatement()
 	case lexer.WHILE:
 		return p.parseWhileStatement()
+	case lexer.BREAK:
+		return p.parseBreakStatement()
 	case lexer.FUNCTION:
 		if p.nextTokenIs(lexer.LPAREN) {
 			return p.parseExprStatement()
