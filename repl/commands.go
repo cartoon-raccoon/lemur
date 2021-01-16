@@ -17,5 +17,10 @@ func quit() {
 }
 
 func help() {
-	fmt.Println("Sorry, help is not implemented at this time")
+	fmt.Println(
+		`List of Commands:
+	:quit       - Leave the REPL
+	:exit       - Alias for quit
+	:set-prompt - Set the prompt
+	`)
 }

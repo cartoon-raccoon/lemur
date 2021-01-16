@@ -39,6 +39,7 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 
 	fmt.Printf("Lemur Interactive Shell v0.1\n")
 	fmt.Printf("running on (%s %s)\n", runtime.GOOS, runtime.GOARCH)
+	fmt.Printf("Type :help for a list of commands")
 	fmt.Printf("Welcome, %s\n", username)
 
 	env := object.NewEnv()
@@ -58,6 +59,7 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 			line += scanner.Text() + "\n"
 
 			if isComplete(line) {
+				nestingLevel = 0
 				break
 			} else {
 				nestingLevel = 0
