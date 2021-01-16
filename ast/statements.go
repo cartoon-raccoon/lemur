@@ -159,3 +159,25 @@ func (ws *WhileStatement) String() string {
 func (ws *WhileStatement) Context() lexer.Context {
 	return ws.Token.Pos
 }
+
+// BreakStatement represents a break statement
+type BreakStatement struct {
+	Token lexer.Token
+}
+
+func (bs *BreakStatement) statementNode() {}
+
+// TokenLiteral implements Node for BreakStatement
+func (bs *BreakStatement) TokenLiteral() string {
+	return bs.Token.Literal
+}
+
+// String implements Node for BreakStatement
+func (bs *BreakStatement) String() string {
+	return bs.Token.Literal
+}
+
+// Context implements Node for BreakStatement
+func (bs *BreakStatement) Context() lexer.Context {
+	return bs.Token.Pos
+}
