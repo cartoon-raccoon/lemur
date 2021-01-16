@@ -121,6 +121,7 @@ const (
 	ELSE     = "else"
 	WHILE    = "while"
 	FOR      = "for"
+	BREAK    = "break"
 	IN       = "in"
 	LOOP     = "loop"
 	STRING   = "str"
@@ -140,6 +141,7 @@ var keywords = map[string]string{
 	"else":   ELSE,
 	"while":  WHILE,
 	"for":    FOR,
+	"break":  BREAK,
 	"in":     IN,
 	"loop":   LOOP,
 	"int":    INT,
