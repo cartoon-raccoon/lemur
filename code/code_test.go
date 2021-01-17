@@ -8,9 +8,10 @@ func TestEncode(t *testing.T) {
 		operands []int
 		expected []byte
 	}{
-		{OpConstant, []int{65534}, []byte{byte(OpConstant), 255, 254}},
+		{OpPush, []int{65534}, []byte{byte(OpPush), 255, 254}},
 		{OpAdd, []int{}, []byte{byte(OpAdd)}},
 		{OpSub, []int{}, []byte{byte(OpSub)}},
+		{OpPop, []int{}, []byte{byte(OpPop)}},
 	}
 
 	for idx, test := range tests {
@@ -31,12 +32,16 @@ func TestEncode(t *testing.T) {
 func TestInstructionsString(t *testing.T) {
 	instructions := []Instructions{
 		Encode(OpSub),
-		Encode(OpConstant, 2),
-		Encode(OpConstant, 65535),
+		Encode(OpAdd),
+		Encode(OpPop),
+		Encode(OpPush, 2),
+		Encode(OpPush, 65535),
 	}
 	expected := `0000 OpSub
-0001 OpConstant 2
-0004 OpConstant 65535
+0001 OpAdd
+0002 OpPop
+0003 OpConstant 2
+0006 OpConstant 65535
 `
 
 	concatted := Instructions{}

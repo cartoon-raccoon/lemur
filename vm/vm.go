@@ -32,13 +32,9 @@ func New() *VM {
 	}
 }
 
-// StackTop returns the item at the top of the stack
-func (vm *VM) StackTop() object.Object {
-	if vm.sp == 0 {
-		return nil
-	}
-
-	return vm.stack[vm.sp-1]
+// LastPopped returns the item just popped from the stack
+func (vm *VM) LastPopped() object.Object {
+	return vm.stack[vm.sp]
 }
 
 // Run executes the code that is given to it via the VM
@@ -50,13 +46,17 @@ func (vm *VM) Run(bc *compiler.Bytecode) error {
 		op := code.Opcode(vm.instructions[vm.ip])
 
 		switch op {
-		case code.OpConstant:
+		case code.OpPush:
 			constIndex := code.ReadUint16(vm.instructions[vm.ip+1:])
 			err := vm.push(vm.constants[constIndex])
 			if err != nil {
 				return err
 			}
 			vm.ip += 2
+
+		case code.OpPop:
+			vm.pop()
+
 		case code.OpAdd:
 			right, err := vm.pop()
 			if err != nil {

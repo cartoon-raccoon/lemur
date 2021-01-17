@@ -37,6 +37,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+		c.emit(code.OpPop)
 	case *ast.InfixExpr:
 		err := c.Compile(node.Left)
 		if err != nil {
@@ -56,16 +57,16 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 	case *ast.Int:
 		integer := &object.Integer{Value: node.Inner}
-		c.emit(code.OpConstant, c.addConstant(integer))
+		c.emit(code.OpPush, c.addConstant(integer))
 	case *ast.Flt:
 		float := &object.Float{Value: node.Inner}
-		c.emit(code.OpConstant, c.addConstant(float))
+		c.emit(code.OpPush, c.addConstant(float))
 	case *ast.Str:
 		str := &object.String{Value: node.Inner}
-		c.emit(code.OpConstant, c.addConstant(str))
+		c.emit(code.OpPush, c.addConstant(str))
 	case *ast.Bool:
 		boolean := &object.Boolean{Value: node.Inner}
-		c.emit(code.OpConstant, c.addConstant(boolean))
+		c.emit(code.OpPush, c.addConstant(boolean))
 	}
 	return nil
 }

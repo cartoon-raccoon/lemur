@@ -13,8 +13,10 @@ type Instructions []byte
 type Opcode byte
 
 const (
-	// OpConstant - retrieves a constant via its operand and pushes it
-	OpConstant Opcode = iota
+	// OpPush - retrieves a constant via its operand and pushes it
+	OpPush Opcode = iota
+	// OpPop - Pops the topmost element off the stack
+	OpPop
 	// OpAdd - Pops the top two values off the stack, adds them and pushes the result
 	OpAdd
 	// OpSub - Does the same thing as OpAdd, but performs subtraction
@@ -32,9 +34,10 @@ type Definition struct {
 }
 
 var definitions = map[Opcode]*Definition{
-	OpConstant: {"OpConstant", 3, []int{2}},
-	OpAdd:      {"OpAdd", 1, []int{}},
-	OpSub:      {"OpSub", 1, []int{}},
+	OpPush: {"OpPush", 3, []int{2}},
+	OpPop:  {"OpPop", 1, []int{}},
+	OpAdd:  {"OpAdd", 1, []int{}},
+	OpSub:  {"OpSub", 1, []int{}},
 }
 
 // Lookup gets the definition of an Opcode
