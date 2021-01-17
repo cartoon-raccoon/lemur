@@ -60,12 +60,13 @@ func (e *Evaluator) evalInfixExpr(expr *ast.InfixExpr, env *object.Environment) 
 	}
 
 	if isComparisonOp(expr.Operator) {
-		return e.evaluateComp(left, right, expr.Operator, expr.Context())
+		return EvaluateComp(left, right, expr.Operator, expr.Context())
 	}
-	return e.evaluateSides(left, right, expr.Operator, expr.Context())
+	return EvaluateSides(left, right, expr.Operator, expr.Context())
 }
 
-func (e *Evaluator) evaluateComp(
+// EvaluateComp compares two values to see if they are equal
+func EvaluateComp(
 	left, right object.Object,
 	op string,
 	con lexer.Context,
@@ -126,7 +127,8 @@ func (e *Evaluator) evaluateComp(
 	}
 }
 
-func (e *Evaluator) evaluateSides(left, right object.Object, op string, con lexer.Context) object.Object {
+// EvaluateSides performs an arithmetic operation on two objects
+func EvaluateSides(left, right object.Object, op string, con lexer.Context) object.Object {
 	switch left.(type) {
 	case *object.Integer:
 		if right, ok := right.(*object.Integer); ok {
