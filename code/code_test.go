@@ -25,3 +25,24 @@ func TestEncode(t *testing.T) {
 		}
 	}
 }
+
+func TestInstructionsString(t *testing.T) {
+	instructions := []Instructions{
+		Encode(OpConstant, 1),
+		Encode(OpConstant, 2),
+		Encode(OpConstant, 65535),
+	}
+	expected := `0000 OpConstant 1
+0003 OpConstant 2
+0006 OpConstant 65535
+`
+
+	concatted := Instructions{}
+	for _, ins := range instructions {
+		concatted = append(concatted, ins...)
+	}
+
+	if str := concatted.String(); str != expected {
+		t.Errorf("Wrong instructions, got %s, expected %s", str, expected)
+	}
+}
