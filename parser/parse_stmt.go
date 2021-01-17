@@ -137,5 +137,9 @@ func (p *Parser) parseWhileStatement() *ast.WhileStatement {
 }
 
 func (p *Parser) parseBreakStatement() *ast.BreakStatement {
-	return &ast.BreakStatement{Token: p.current}
+	stmt := &ast.BreakStatement{Token: p.current}
+	if p.nextTokenIs(lexer.SEMICOL) {
+		p.advance()
+	}
+	return stmt
 }
