@@ -1,6 +1,8 @@
 package compiler
 
 import (
+	"fmt"
+
 	"github.com/cartoon-raccoon/lemur/ast"
 	"github.com/cartoon-raccoon/lemur/code"
 	"github.com/cartoon-raccoon/lemur/object"
@@ -43,6 +45,12 @@ func (c *Compiler) Compile(node ast.Node) error {
 		err = c.Compile(node.Right)
 		if err != nil {
 			return err
+		}
+		switch node.Operator {
+		case "+":
+			c.emit(code.OpAdd)
+		default:
+			return fmt.Errorf("unknown operator: %s", node.Operator)
 		}
 	case *ast.Int:
 		integer := &object.Integer{Value: node.Inner}

@@ -15,6 +15,8 @@ type Opcode byte
 const (
 	// OpConstant - retrieves a constant via its operand and pushes it
 	OpConstant Opcode = iota
+	// OpAdd - Pops the top two values off the stack, adds them and pushes the result
+	OpAdd
 )
 
 // Definition defines a single instruction - opcode and operand widths
@@ -29,6 +31,7 @@ type Definition struct {
 
 var definitions = map[Opcode]*Definition{
 	OpConstant: {"OpConstant", 3, []int{2}},
+	OpAdd:      {"OpAdd", 1, []int{}},
 }
 
 // Lookup gets the definition of an Opcode
@@ -45,7 +48,7 @@ func Encode(op Opcode, operands ...int) []byte {
 	// lookup instruction definition
 	def, ok := definitions[op]
 	if !ok {
-		return []byte{}
+		return nil
 	}
 
 	// calculate space needed for instruction
@@ -55,6 +58,7 @@ func Encode(op Opcode, operands ...int) []byte {
 	}
 
 	instruction := make([]byte, instLen)
+	instruction[0] = byte(op)
 
 	// putting the actual values
 	offset := 1
@@ -79,7 +83,7 @@ func (ins Instructions) String() string {
 		def, err := Lookup(ins[i])
 		if err != nil {
 			fmt.Fprintf(&out, "ERROR: %s\n", err)
-			continue
+			return out.String()
 		}
 
 		operands, read := ReadOperands(def, ins[i+1:])
@@ -100,6 +104,8 @@ func (ins Instructions) fmtInstruction(def *Definition, operands []int) string {
 	}
 
 	switch operandCount {
+	case 0:
+		return def.Name
 	case 1:
 		return fmt.Sprintf("%s %d", def.Name, operands[0])
 	default:

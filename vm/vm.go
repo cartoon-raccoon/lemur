@@ -43,6 +43,7 @@ func (vm *VM) StackTop() object.Object {
 func (vm *VM) Run(bc *compiler.Bytecode) error {
 	vm.instructions = bc.Instructions
 	vm.constants = bc.Constants
+	vm.sp = 0
 	for vm.ip = 0; vm.ip < len(vm.instructions); vm.ip++ {
 		op := code.Opcode(vm.instructions[vm.ip])
 
@@ -54,6 +55,20 @@ func (vm *VM) Run(bc *compiler.Bytecode) error {
 				return err
 			}
 			vm.ip += 2
+		case code.OpAdd:
+			right, err := vm.pop()
+			if err != nil {
+				return err
+			}
+			left, err := vm.pop()
+			if err != nil {
+				return err
+			}
+
+			leftValue := left.(*object.Integer).Value
+			rightValue := right.(*object.Integer).Value
+			result := leftValue + rightValue
+			vm.push(&object.Integer{Value: result})
 		}
 	}
 	return nil
@@ -68,4 +83,14 @@ func (vm *VM) push(o object.Object) error {
 	vm.sp++
 
 	return nil
+}
+
+func (vm *VM) pop() (object.Object, error) {
+	if vm.sp == 0 {
+		return nil, fmt.Errorf("stack underflow")
+	}
+
+	o := vm.stack[vm.sp-1]
+	vm.sp--
+	return o, nil
 }
