@@ -10,6 +10,7 @@ func TestEncode(t *testing.T) {
 	}{
 		{OpConstant, []int{65534}, []byte{byte(OpConstant), 255, 254}},
 		{OpAdd, []int{}, []byte{byte(OpAdd)}},
+		{OpSub, []int{}, []byte{byte(OpSub)}},
 	}
 
 	for idx, test := range tests {
@@ -29,11 +30,11 @@ func TestEncode(t *testing.T) {
 
 func TestInstructionsString(t *testing.T) {
 	instructions := []Instructions{
-		Encode(OpAdd),
+		Encode(OpSub),
 		Encode(OpConstant, 2),
 		Encode(OpConstant, 65535),
 	}
-	expected := `0000 OpAdd
+	expected := `0000 OpSub
 0001 OpConstant 2
 0004 OpConstant 65535
 `

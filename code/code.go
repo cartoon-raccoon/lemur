@@ -17,6 +17,8 @@ const (
 	OpConstant Opcode = iota
 	// OpAdd - Pops the top two values off the stack, adds them and pushes the result
 	OpAdd
+	// OpSub - Does the same thing as OpAdd, but performs subtraction
+	OpSub
 )
 
 // Definition defines a single instruction - opcode and operand widths
@@ -32,6 +34,7 @@ type Definition struct {
 var definitions = map[Opcode]*Definition{
 	OpConstant: {"OpConstant", 3, []int{2}},
 	OpAdd:      {"OpAdd", 1, []int{}},
+	OpSub:      {"OpSub", 1, []int{}},
 }
 
 // Lookup gets the definition of an Opcode

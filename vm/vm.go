@@ -5,6 +5,8 @@ import (
 
 	"github.com/cartoon-raccoon/lemur/code"
 	"github.com/cartoon-raccoon/lemur/compiler"
+	"github.com/cartoon-raccoon/lemur/eval"
+	"github.com/cartoon-raccoon/lemur/lexer"
 	"github.com/cartoon-raccoon/lemur/object"
 )
 
@@ -65,10 +67,21 @@ func (vm *VM) Run(bc *compiler.Bytecode) error {
 				return err
 			}
 
-			leftValue := left.(*object.Integer).Value
-			rightValue := right.(*object.Integer).Value
-			result := leftValue + rightValue
-			vm.push(&object.Integer{Value: result})
+			result := eval.EvaluateSides(left, right, "+", lexer.Context{})
+			vm.push(result)
+
+		case code.OpSub:
+			right, err := vm.pop()
+			if err != nil {
+				return err
+			}
+			left, err := vm.pop()
+			if err != nil {
+				return err
+			}
+
+			result := eval.EvaluateSides(left, right, "-", lexer.Context{})
+			vm.push(result)
 		}
 	}
 	return nil
