@@ -36,7 +36,7 @@ const (
 	SUM
 	// PRODUCT - a * b
 	PRODUCT
-	// BITWISE - <<, >>, &, |, ~
+	// BITWISE - <<, >>, &, |, ^
 	BITWISE
 	// LOGIC - &&, ||
 	LOGIC
@@ -109,6 +109,7 @@ func New(l *lexer.Lexer) (*Parser, error) {
 	p.registerPrefixFn(lexer.IF, p.parseIfExpression)
 	p.registerPrefixFn(lexer.FUNCTION, p.parseFnLiteral)
 	p.registerPrefixFn(lexer.LBRACE, p.parseMapLiteral)
+	p.registerPrefixFn(lexer.BWNOT, p.parsePrefixExpr)
 
 	// Registering infix parse functions
 	p.infixParseFns = make(map[string]infixParseFn)

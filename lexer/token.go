@@ -78,7 +78,7 @@ const (
 
 	BWOR  = "|"
 	BWAND = "&"
-	BWNOT = "~"
+	BWNOT = "^"
 
 	BWOASSIGN = "|="
 	BWAASSIGN = "&="

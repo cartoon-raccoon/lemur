@@ -10,10 +10,12 @@ import (
 
 func (e *Evaluator) evalPrefixExpr(expr *ast.PrefixExpr, env *object.Environment) object.Object {
 	switch expr.Operator {
-	case "!":
+	case lexer.BANG:
 		return e.evalBangPExpr(expr.Right, env)
-	case "-":
+	case lexer.SUB:
 		return e.evalMinusPExpr(expr.Right, env)
+	case lexer.BWNOT:
+		return e.evalBWNotPExpr(expr.Right, env)
 	default:
 		return &object.Exception{Msg: "evalPrefixExpr: unreachable", Con: expr.Token.Pos}
 	}
@@ -38,6 +40,18 @@ func (e *Evaluator) evalMinusPExpr(expr ast.Expression, env *object.Environment)
 		return &object.Float{Value: -num}
 	default:
 		return &object.Exception{Msg: "MINUS usage on boolean or string", Con: expr.Context()}
+	}
+}
+
+func (e *Evaluator) evalBWNotPExpr(expr ast.Expression, env *object.Environment) object.Object {
+	pexpr := e.Evaluate(expr, env)
+
+	switch pexpr.(type) {
+	case *object.Integer:
+		num := pexpr.(*object.Integer).Value
+		return &object.Integer{Value: ^num}
+	default:
+		return &object.Exception{Msg: "BWNOT usage on boolean, float or string", Con: expr.Context()}
 	}
 }
 
@@ -272,6 +286,8 @@ func executeOpInt(left, right int64, op string) int64 {
 		return left & right
 	case lexer.BWOR:
 		return left | right
+	case lexer.BWNOT:
+		return left ^ right
 	case lexer.BSL:
 		return left << right
 	case lexer.BSR:

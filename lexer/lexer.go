@@ -143,7 +143,7 @@ func (l *Lexer) NextToken() (Token, error) {
 			return newToken(BWOR, BWOR, l.line, l.col, l.context), nil
 		}
 
-	case l.ch == '~':
+	case l.ch == '^':
 		l.nextChar()
 		if l.ch == '=' {
 			l.nextChar()
