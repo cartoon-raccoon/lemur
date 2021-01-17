@@ -8,10 +8,10 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/cartoon-raccoon/lemur/eval"
+	"github.com/cartoon-raccoon/lemur/compiler"
 	"github.com/cartoon-raccoon/lemur/lexer"
-	"github.com/cartoon-raccoon/lemur/object"
 	"github.com/cartoon-raccoon/lemur/parser"
+	"github.com/cartoon-raccoon/lemur/vm"
 )
 
 // PROMPT - the prompt that the user sees
@@ -37,13 +37,15 @@ func New() *Repl {
 func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 
-	fmt.Printf("Lemur Interactive Shell v0.1\n")
-	fmt.Printf("running on (%s %s)\n", runtime.GOOS, runtime.GOARCH)
-	fmt.Printf("Type :help for a list of commands")
+	fmt.Printf("Lemur Interactive Shell v0.1 ")
+	fmt.Printf("(%s %s)\n", runtime.GOOS, runtime.GOARCH)
+	fmt.Printf("Type :help for a list of commands\n")
 	fmt.Printf("Welcome, %s\n", username)
 
-	env := object.NewEnv()
-	evaluator := eval.New()
+	//env := object.NewEnv()
+	//e := eval.New()
+	c := compiler.New()
+	vm := vm.New()
 
 	for {
 		prompt := PROMPT
@@ -98,12 +100,17 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 			continue
 		}
 
-		obj := evaluator.Evaluate(prog, env)
-
-		if obj == nil {
-			continue
+		err = c.Compile(prog)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
 		}
-		obj.Display()
+
+		err = vm.Run(c.Bytecode())
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+		}
+
+		vm.LastPopped().Display()
 
 	}
 }
