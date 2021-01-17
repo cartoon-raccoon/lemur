@@ -20,8 +20,8 @@ var (
 
 // Evaluator epresents the program that walks the tree
 type Evaluator struct {
-	Ctxt   lexer.Context
-	InLoop bool
+	Ctxt      lexer.Context
+	loopcount int
 }
 
 var builtins = map[string]*object.Builtin{
@@ -141,8 +141,8 @@ var builtins = map[string]*object.Builtin{
 // New - returns a new evaluator
 func New() *Evaluator {
 	eval := &Evaluator{
-		Ctxt:   lexer.Context{Line: 1, Col: 1, Ctxt: ""},
-		InLoop: false,
+		Ctxt:      lexer.Context{Line: 1, Col: 1, Ctxt: ""},
+		loopcount: 0,
 	}
 	return eval
 }
@@ -200,7 +200,7 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 			return &object.Return{Inner: res}
 
 		case *ast.WhileStatement:
-			e.InLoop = true
+			e.loopcount++
 			whilestmt := stmt.(*ast.WhileStatement)
 
 			var result object.Object
@@ -213,18 +213,18 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 				result = e.evalBlockStmt(whilestmt.Body, env)
 				if object.IsErr(result) || object.IsBreak(result) {
 					if object.IsBreak(result) {
-						e.InLoop = false
+						e.loopcount--
 						return NULL
 					}
 					return result
 				}
 			}
 
-			e.InLoop = false
+			e.loopcount--
 			return result
 
 		case *ast.BreakStatement:
-			if !e.InLoop {
+			if e.loopcount == 0 {
 				return &object.Exception{
 					Msg: "Cannot use break outside of loop",
 					Con: node.(ast.Statement).Context(),
@@ -391,7 +391,7 @@ func (e *Evaluator) Evaluate(node ast.Node, env *object.Environment) object.Obje
 		}
 	}
 	return &object.Exception{
-		Msg: "Evaluate: unreachable code",
+		Msg: fmt.Sprintf("Evaluate: unreachable code, got %T", node),
 		Con: node.Context(),
 	}
 }
