@@ -70,9 +70,16 @@ func testInstructions(expected []code.Instructions, actual code.Instructions) er
 
 	if len(actual) != len(concatted) {
 		return fmt.Errorf("wrong instructions length, got %q, expected %q",
-			len(concatted),
-			len(actual),
+			actual,
+			concatted,
 		)
+	}
+
+	for i, ins := range concatted {
+		if actual[i] != ins {
+			return fmt.Errorf("wrong instruction at %d, expected %q, got %q",
+				i, concatted, actual)
+		}
 	}
 	return nil
 }
