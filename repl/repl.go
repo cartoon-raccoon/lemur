@@ -42,8 +42,8 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 	fmt.Printf("Type :help for a list of commands\n")
 	fmt.Printf("Welcome, %s\n", username)
 
-	//env := object.NewEnv()
-	//e := eval.New()
+	// env := object.NewEnv()
+	// e := eval.New()
 	c := compiler.New()
 	vm := vm.New()
 
@@ -100,14 +100,20 @@ func (r *Repl) Run(username string, in io.Reader, out io.Writer) {
 			continue
 		}
 
+		// res := e.Evaluate(prog, env)
+
+		// res.Display()
+
 		err = c.Compile(prog)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
+			continue
 		}
 
 		err = vm.Run(c.Bytecode())
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
+			continue
 		}
 
 		vm.LastPopped().Display()
