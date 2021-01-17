@@ -21,6 +21,14 @@ const (
 	OpAdd
 	// OpSub - Does the same thing as OpAdd, but performs subtraction
 	OpSub
+	// OpMul - OpSub but multiplication
+	OpMul
+	// OpDiv - OpMul but division
+	OpDiv
+	// OpBWAnd - Bitwise And
+	OpBWAnd
+	// OpBWOr - Bitwise Or
+	OpBWOr
 )
 
 // Definition defines a single instruction - opcode and operand widths
@@ -38,6 +46,8 @@ var definitions = map[Opcode]*Definition{
 	OpPop:  {"OpPop", 1, []int{}},
 	OpAdd:  {"OpAdd", 1, []int{}},
 	OpSub:  {"OpSub", 1, []int{}},
+	OpMul:  {"OpMul", 1, []int{}},
+	OpDiv:  {"OpDiv", 1, []int{}},
 }
 
 // Lookup gets the definition of an Opcode

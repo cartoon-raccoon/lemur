@@ -5,6 +5,7 @@ import (
 
 	"github.com/cartoon-raccoon/lemur/ast"
 	"github.com/cartoon-raccoon/lemur/code"
+	"github.com/cartoon-raccoon/lemur/lexer"
 	"github.com/cartoon-raccoon/lemur/object"
 )
 
@@ -48,10 +49,14 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 		switch node.Operator {
-		case "+":
+		case lexer.ADD:
 			c.emit(code.OpAdd)
-		case "-":
+		case lexer.SUB:
 			c.emit(code.OpSub)
+		case lexer.MUL:
+			c.emit(code.OpMul)
+		case lexer.DIV:
+			c.emit(code.OpDiv)
 		default:
 			return fmt.Errorf("unknown operator: %s", node.Operator)
 		}
