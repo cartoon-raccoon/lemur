@@ -57,6 +57,12 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.emit(code.OpMul)
 		case lexer.DIV:
 			c.emit(code.OpDiv)
+		case lexer.BWAND:
+			c.emit(code.OpBWAnd)
+		case lexer.BWOR:
+			c.emit(code.OpBWOr)
+		case lexer.BWNOT:
+			c.emit(code.OpBWXOR)
 		default:
 			return fmt.Errorf("unknown operator: %s", node.Operator)
 		}

@@ -29,6 +29,8 @@ const (
 	OpBWAnd
 	// OpBWOr - Bitwise Or
 	OpBWOr
+	// OpBWXOR - Bitwise XOR
+	OpBWXOR
 )
 
 // Definition defines a single instruction - opcode and operand widths
@@ -42,12 +44,15 @@ type Definition struct {
 }
 
 var definitions = map[Opcode]*Definition{
-	OpPush: {"OpPush", 3, []int{2}},
-	OpPop:  {"OpPop", 1, []int{}},
-	OpAdd:  {"OpAdd", 1, []int{}},
-	OpSub:  {"OpSub", 1, []int{}},
-	OpMul:  {"OpMul", 1, []int{}},
-	OpDiv:  {"OpDiv", 1, []int{}},
+	OpPush:  {"OpPush", 3, []int{2}},
+	OpPop:   {"OpPop", 1, []int{}},
+	OpAdd:   {"OpAdd", 1, []int{}},
+	OpSub:   {"OpSub", 1, []int{}},
+	OpMul:   {"OpMul", 1, []int{}},
+	OpDiv:   {"OpDiv", 1, []int{}},
+	OpBWAnd: {"OpBWAnd", 1, []int{}},
+	OpBWOr:  {"OpBWOr", 1, []int{}},
+	OpBWXOR: {"OpBWXOR", 1, []int{}},
 }
 
 // Lookup gets the definition of an Opcode

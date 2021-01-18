@@ -108,6 +108,44 @@ func (vm *VM) Run(bc *compiler.Bytecode) error {
 
 			result := eval.EvaluateSides(left, right, "/", lexer.Context{})
 			vm.push(result)
+
+		case code.OpBWAnd:
+			right, err := vm.pop()
+			if err != nil {
+				return err
+			}
+			left, err := vm.pop()
+			if err != nil {
+				return err
+			}
+
+			result := eval.EvaluateSides(left, right, "&", lexer.Context{})
+			vm.push(result)
+
+		case code.OpBWOr:
+			right, err := vm.pop()
+			if err != nil {
+				return err
+			}
+			left, err := vm.pop()
+			if err != nil {
+				return err
+			}
+
+			result := eval.EvaluateSides(left, right, "|", lexer.Context{})
+			vm.push(result)
+		case code.OpBWXOR:
+			right, err := vm.pop()
+			if err != nil {
+				return err
+			}
+			left, err := vm.pop()
+			if err != nil {
+				return err
+			}
+
+			result := eval.EvaluateSides(left, right, "^", lexer.Context{})
+			vm.push(result)
 		}
 
 	}
