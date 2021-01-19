@@ -35,6 +35,14 @@ const (
 	OpTrue
 	// OpFalse - Pushes false to the stack
 	OpFalse
+	// OpEq - Tells the vm to test two objects for equality
+	OpEq
+	// OpNE - Tells the vm to test for inequality
+	OpNE
+	// OpGT - Tells the vm to test for greater than
+	OpGT
+	// OpGE - Tells the vm to test for greater than or equal to
+	OpGE
 )
 
 // Definition defines a single instruction - opcode and operand widths
@@ -59,6 +67,10 @@ var definitions = map[Opcode]*Definition{
 	OpBWXOR: {"OpBWXOR", 1, []int{}},
 	OpTrue:  {"OpTrue", 1, []int{}},
 	OpFalse: {"OpFalse", 1, []int{}},
+	OpEq:    {"OpEq", 1, []int{}},
+	OpNE:    {"OpNE", 1, []int{}},
+	OpGT:    {"OpGT", 1, []int{}},
+	OpGE:    {"OpGE", 1, []int{}},
 }
 
 // Lookup gets the definition of an Opcode

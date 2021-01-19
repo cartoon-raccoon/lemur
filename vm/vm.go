@@ -152,6 +152,54 @@ func (vm *VM) Run(bc *compiler.Bytecode) error {
 
 			result := eval.EvaluateSides(left, right, "^", lexer.Context{})
 			vm.push(result)
+		case code.OpEq:
+			right, err := vm.pop()
+			if err != nil {
+				return err
+			}
+			left, err := vm.pop()
+			if err != nil {
+				return err
+			}
+
+			result := eval.EvaluateComp(left, right, "==", lexer.Context{})
+			vm.push(result)
+		case code.OpNE:
+			right, err := vm.pop()
+			if err != nil {
+				return err
+			}
+			left, err := vm.pop()
+			if err != nil {
+				return err
+			}
+
+			result := eval.EvaluateComp(left, right, "!=", lexer.Context{})
+			vm.push(result)
+		case code.OpGT:
+			right, err := vm.pop()
+			if err != nil {
+				return err
+			}
+			left, err := vm.pop()
+			if err != nil {
+				return err
+			}
+
+			result := eval.EvaluateComp(left, right, ">", lexer.Context{})
+			vm.push(result)
+		case code.OpGE:
+			right, err := vm.pop()
+			if err != nil {
+				return err
+			}
+			left, err := vm.pop()
+			if err != nil {
+				return err
+			}
+
+			result := eval.EvaluateComp(left, right, ">=", lexer.Context{})
+			vm.push(result)
 		case code.OpTrue:
 			vm.push(True)
 		case code.OpFalse:

@@ -40,6 +40,22 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 		c.emit(code.OpPop)
 	case *ast.InfixExpr:
+		if node.Operator == lexer.LT || node.Operator == lexer.LE {
+			err := c.Compile(node.Right)
+			if err != nil {
+				return err
+			}
+			err = c.Compile(node.Left)
+			if err != nil {
+				return err
+			}
+			if node.Operator == lexer.LT {
+				c.emit(code.OpGT)
+			} else {
+				c.emit(code.OpGE)
+			}
+			return nil
+		}
 		err := c.Compile(node.Left)
 		if err != nil {
 			return err
@@ -63,6 +79,14 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.emit(code.OpBWOr)
 		case lexer.BWNOT:
 			c.emit(code.OpBWXOR)
+		case lexer.EQ:
+			c.emit(code.OpEq)
+		case lexer.NE:
+			c.emit(code.OpNE)
+		case lexer.GT:
+			c.emit(code.OpGT)
+		case lexer.GE:
+			c.emit(code.OpGE)
 		default:
 			return fmt.Errorf("unknown operator: %s", node.Operator)
 		}
