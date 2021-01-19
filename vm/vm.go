@@ -201,9 +201,35 @@ func (vm *VM) Run(bc *compiler.Bytecode) error {
 			result := eval.EvaluateComp(left, right, ">=", lexer.Context{})
 			vm.push(result)
 		case code.OpTrue:
-			vm.push(True)
+			vm.push(eval.TRUE)
 		case code.OpFalse:
-			vm.push(False)
+			vm.push(eval.FALSE)
+		case code.OpBang:
+			op, err := vm.pop()
+			if err != nil {
+				return err
+			}
+			vm.push(vm.evalPrefixBang(op))
+		case code.OpMinus:
+			op, err := vm.pop()
+			if err != nil {
+				return err
+			}
+			vm.push(vm.evalPrefixMinus(op))
+		case code.OpBWNOT:
+			op, err := vm.pop()
+			if err != nil {
+				return err
+			}
+			obj, ok := op.(*object.Integer)
+			if !ok {
+				vm.push(&object.Exception{
+					Msg: "Cannot use bitwise NOT on non-integer\n",
+					Con: lexer.Context{},
+				})
+			} else {
+				vm.push(&object.Integer{Value: ^obj.Value})
+			}
 		}
 	}
 	return nil
@@ -228,4 +254,30 @@ func (vm *VM) pop() (object.Object, error) {
 	o := vm.stack[vm.sp-1]
 	vm.sp--
 	return o, nil
+}
+
+func (vm *VM) evalPrefixBang(op object.Object) object.Object {
+	if op != eval.TRUE || op != eval.FALSE {
+		return &object.Exception{
+			Msg: "Cannot use bang on operand\n",
+			Con: lexer.Context{},
+		}
+	}
+	if op == eval.TRUE {
+		return eval.FALSE
+	}
+	return eval.TRUE
+}
+func (vm *VM) evalPrefixMinus(op object.Object) object.Object {
+	switch obj := op.(type) {
+	case *object.Integer:
+		return &object.Integer{Value: -obj.Value}
+	case *object.Float:
+		return &object.Float{Value: -obj.Value}
+	default:
+		return &object.Exception{
+			Msg: "Cannot use - on operand\n",
+			Con: lexer.Context{},
+		}
+	}
 }

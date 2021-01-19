@@ -31,6 +31,8 @@ const (
 	OpBWOr
 	// OpBWXOR - Bitwise XOR
 	OpBWXOR
+	// OpBWNOT - Bitwise NOT
+	OpBWNOT
 	// OpTrue - Pushes true to the stack
 	OpTrue
 	// OpFalse - Pushes false to the stack
@@ -43,6 +45,10 @@ const (
 	OpGT
 	// OpGE - Tells the vm to test for greater than or equal to
 	OpGE
+	// OpMinus - For prefix negation
+	OpMinus
+	// OpBang - For boolean negation
+	OpBang
 )
 
 // Definition defines a single instruction - opcode and operand widths
@@ -65,12 +71,15 @@ var definitions = map[Opcode]*Definition{
 	OpBWAnd: {"OpBWAnd", 1, []int{}},
 	OpBWOr:  {"OpBWOr", 1, []int{}},
 	OpBWXOR: {"OpBWXOR", 1, []int{}},
+	OpBWNOT: {"OpBWNOT", 1, []int{}},
 	OpTrue:  {"OpTrue", 1, []int{}},
 	OpFalse: {"OpFalse", 1, []int{}},
 	OpEq:    {"OpEq", 1, []int{}},
 	OpNE:    {"OpNE", 1, []int{}},
 	OpGT:    {"OpGT", 1, []int{}},
 	OpGE:    {"OpGE", 1, []int{}},
+	OpMinus: {"OpMinus", 1, []int{}},
+	OpBang:  {"OpBang", 1, []int{}},
 }
 
 // Lookup gets the definition of an Opcode

@@ -39,6 +39,21 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 		c.emit(code.OpPop)
+	case *ast.PrefixExpr:
+		err := c.Compile(node.Right)
+		if err != nil {
+			return err
+		}
+		switch node.Operator {
+		case lexer.BANG:
+			c.emit(code.OpBang)
+		case lexer.SUB:
+			c.emit(code.OpMinus)
+		case lexer.BWNOT:
+			c.emit(code.OpBWNOT)
+		default:
+			return fmt.Errorf("Unknown operator %s", node.Operator)
+		}
 	case *ast.InfixExpr:
 		if node.Operator == lexer.LT || node.Operator == lexer.LE {
 			err := c.Compile(node.Right)
