@@ -76,8 +76,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 		str := &object.String{Value: node.Inner}
 		c.emit(code.OpPush, c.addConstant(str))
 	case *ast.Bool:
-		boolean := &object.Boolean{Value: node.Inner}
-		c.emit(code.OpPush, c.addConstant(boolean))
+		if node.Inner {
+			c.emit(code.OpTrue)
+		} else {
+			c.emit(code.OpFalse)
+		}
 	}
 	return nil
 }

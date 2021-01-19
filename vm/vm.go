@@ -13,6 +13,12 @@ import (
 // StackSize is the maximum size the stack can take
 const StackSize = 2048
 
+// True - an invariant true object
+var True = &object.Boolean{Value: true}
+
+// False - an invariant false object
+var False = &object.Boolean{Value: false}
+
 // VM represents the virtual machine
 type VM struct {
 	constants    []object.Object
@@ -146,8 +152,11 @@ func (vm *VM) Run(bc *compiler.Bytecode) error {
 
 			result := eval.EvaluateSides(left, right, "^", lexer.Context{})
 			vm.push(result)
+		case code.OpTrue:
+			vm.push(True)
+		case code.OpFalse:
+			vm.push(False)
 		}
-
 	}
 	return nil
 }

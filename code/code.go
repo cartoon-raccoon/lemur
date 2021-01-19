@@ -31,6 +31,10 @@ const (
 	OpBWOr
 	// OpBWXOR - Bitwise XOR
 	OpBWXOR
+	// OpTrue - Pushes true to the stack
+	OpTrue
+	// OpFalse - Pushes false to the stack
+	OpFalse
 )
 
 // Definition defines a single instruction - opcode and operand widths
@@ -53,6 +57,8 @@ var definitions = map[Opcode]*Definition{
 	OpBWAnd: {"OpBWAnd", 1, []int{}},
 	OpBWOr:  {"OpBWOr", 1, []int{}},
 	OpBWXOR: {"OpBWXOR", 1, []int{}},
+	OpTrue:  {"OpTrue", 1, []int{}},
+	OpFalse: {"OpFalse", 1, []int{}},
 }
 
 // Lookup gets the definition of an Opcode
