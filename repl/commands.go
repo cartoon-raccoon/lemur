@@ -19,8 +19,26 @@ func quit() {
 func help() {
 	fmt.Println(
 		`List of Commands:
-	:quit       - Leave the REPL
-	:exit       - Alias for quit
-	:set-prompt - Set the prompt
+	:quit    - Leave the REPL
+	:exit    - Alias for quit
+	:prompt  - Set the prompt
+	:engine  - Set the engine used for evaluation
 	`)
+}
+
+func tokenizeCommand(cmd string) []string {
+	tokens := []string{}
+
+	pos := 0
+
+	for i, char := range cmd {
+		switch char {
+		case ' ':
+			tokens = append(tokens, cmd[pos:i])
+			pos = i + 1
+
+		}
+	}
+
+	return tokens
 }
