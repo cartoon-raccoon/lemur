@@ -256,7 +256,6 @@ func (de *DotExpression) Context() lexer.Context {
 type Literal interface {
 	Node
 	Literal()
-	String() string
 }
 
 //! Int
